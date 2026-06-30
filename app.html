@@ -99,6 +99,19 @@
     <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20"><path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>
   </button>
   <h1 class="topbar-title" id="pageTitle">Overview</h1>
+  <div class="topbar-search">
+    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd"/></svg>
+    <input type="text" placeholder="Search students, classes, invoices…" id="globalSearch" />
+    <span class="kbd-hint">⌘K</span>
+  </div>
+  <div class="topbar-year" id="topbarYear">
+    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>
+    <span id="academicYearLabel">2025-2026</span>
+  </div>
+  <div class="topbar-progress" id="topbarProgress">
+    <div class="topbar-progress-bar"><div class="topbar-progress-fill" id="yearProgressFill" style="width:0%"></div></div>
+    <span class="topbar-progress-label" id="yearProgressLabel"></span>
+  </div>
   <div class="topbar-actions" id="topbarActions"></div>
   <div class="topbar-user" id="topbarUser">
     <div class="user-avatar" id="userAvatar">A</div>

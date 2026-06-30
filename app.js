@@ -70,6 +70,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // Logout
   document.getElementById('logoutBtn').addEventListener('click', logout);
 
+  // Academic year label + progress (Aug 1 – Jun 30 school year)
+  (function initAcademicYear() {
+    const now = new Date();
+    const y = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1; // school year starts August
+    const start = new Date(y, 7, 1);
+    const end = new Date(y + 1, 6, 31);
+    document.getElementById('academicYearLabel').textContent = `${y}-${y + 1}`;
+    const totalDays = (end - start) / 86400000;
+    const elapsed = Math.min(Math.max((now - start) / 86400000, 0), totalDays);
+    const pct = Math.round((elapsed / totalDays) * 100);
+    const weeksLeft = Math.max(Math.ceil((end - now) / (7 * 86400000)), 0);
+    document.getElementById('yearProgressFill').style.width = pct + '%';
+    document.getElementById('yearProgressLabel').textContent = now > end || now < start ? 'Out of session' : `${weeksLeft} weeks left`;
+  })();
+
+  // Global search — Enter jumps to Students page filtered by query
+  document.getElementById('globalSearch').addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const q = e.target.value.trim();
+      navigate('students');
+      setTimeout(() => renderStudentList('active', q), 0);
+    }
+  });
+
   // Modal close
   document.getElementById('modalClose').addEventListener('click', closeModal);
   document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
@@ -133,6 +157,17 @@ function avatarColor(name) { let h = 0; for (const c of name) h += c.charCodeAt(
 function initials(first, last) { return ((first[0] || '') + (last[0] || '')).toUpperCase(); }
 function formatDate(d) { if (!d) return '—'; const dt = new Date(d.includes('T') ? d : d + 'T00:00:00'); return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
 function today() { return new Date().toISOString().split('T')[0]; }
+function timeAgo(idTimestamp) {
+  const ms = Date.now() - Number(idTimestamp);
+  if (!isFinite(ms) || ms < 0) return 'just now';
+  const mins = Math.floor(ms / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} min${mins !== 1 ? 's' : ''} ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hour${hrs !== 1 ? 's' : ''} ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days} day${days !== 1 ? 's' : ''} ago`;
+}
 
 // =============================================
 // PAGE: DASHBOARD
@@ -141,90 +176,147 @@ function dashboard() {
   const students = DB.getList('students');
   const classes = DB.getList('classes');
   const grades = DB.getList('grades');
+  const staffList = DB.getList('staff');
+  const messages = DB.getList('messages');
+  const parents = DB.getList('parents');
+  const user = getUser();
   const active = students.filter(s => s.status === 'active').length;
 
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  // Recent activity — newest students/staff first
+  const activityItems = [
+    ...students.slice(-5).map(s => ({ text: `${s.firstName} ${s.lastName} joined`, time: s.id ? timeAgo(s.id) : '', sortId: s.id || 0 })),
+    ...staffList.slice(-3).map(s => ({ text: `${s.name} added as staff`, time: s.id ? timeAgo(s.id) : '', sortId: s.id || 0 }))
+  ].sort((a, b) => b.sortId - a.sortId).slice(0, 5);
 
-  const recent = [];
-  if (students.length > 0) recent.push({ icon: '👥', text: `${students.length} student${students.length !== 1 ? 's' : ''} enrolled across ${classes.length} class${classes.length !== 1 ? 'es' : ''}`, time: 'Total' });
-  if (grades.length > 0) recent.push({ icon: '📊', text: `${grades.length} grade entr${grades.length !== 1 ? 'ies' : 'y'} recorded`, time: 'Gradebook' });
-  if (classes.length > 0) recent.push({ icon: '🏫', text: `${classes.length} class${classes.length !== 1 ? 'es' : ''} active — ${students.length} student${students.length !== 1 ? 's' : ''} total`, time: 'Classes' });
-  recent.push({ icon: '🔔', text: 'Welcome to SchoolTrack!', time: 'Setup complete' });
+  const recentAnnouncements = messages.filter(m => m.recipientType === 'announcement' || m.recipientType === 'parents').slice(-3).reverse();
 
   document.getElementById('mainContent').innerHTML = `
-    <div class="page-header">
-      <div>
-        <h2>${greeting} 👋</h2>
-        <p>Here's what's happening at ${getUser().schoolName || 'your school'} today.</p>
+    <div class="profile-card">
+      <div class="profile-card-left">
+        <div class="profile-avatar">${(user.firstName?.[0] || 'A').toUpperCase()}</div>
+        <div>
+          <div class="profile-name">${(user.firstName || '').toUpperCase()} ${(user.lastName || '').toUpperCase()}</div>
+          <div class="profile-role">${user.isStaff ? (user.role || 'Staff') : 'Administrator'} at ${user.schoolName || 'My School'}</div>
+          <div class="profile-meta">
+            <span>✉️ ${user.email || '—'}</span>
+            <span>📞 ${user.phone || '—'}</span>
+            <span>🏫 ${user.schoolName || 'My School'}</span>
+          </div>
+        </div>
       </div>
-      <button class="btn btn-primary" onclick="navigate('enrollment')">+ Enroll Student</button>
+      <div class="profile-card-actions">
+        <button class="btn btn-secondary" onclick="navigate('settings')">✎ Edit Profile</button>
+        <button class="btn btn-primary" onclick="navigate('settings')">⚙ Settings</button>
+      </div>
     </div>
 
     <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon">👥</div>
-        <div class="stat-label">Total Students</div>
-        <div class="stat-value">${students.length}</div>
-        <div class="stat-sub">${active} active</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">🏫</div>
-        <div class="stat-label">Classes</div>
-        <div class="stat-value">${classes.length}</div>
-        <div class="stat-sub">Active programs</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">📋</div>
-        <div class="stat-label">Attendance Records</div>
-        <div class="stat-value">${DB.getList('attendance').length || '—'}</div>
-        <div class="stat-sub">${DB.getList('attendance').length ? 'Total entries' : 'None yet'}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">📈</div>
-        <div class="stat-label">Avg. Grade</div>
-        <div class="stat-value">${grades.length ? Math.round(grades.reduce((a,g)=>a+(g.score/g.total*100),0)/grades.length) + '%' : '—'}</div>
-        <div class="stat-sub">${grades.length ? 'All subjects' : 'No grades yet'}</div>
-      </div>
+      <div class="stat-card"><div class="stat-value">${students.length}</div><div class="stat-sub">Students</div></div>
+      <div class="stat-card"><div class="stat-value">${staffList.length}</div><div class="stat-sub">Teachers</div></div>
+      <div class="stat-card"><div class="stat-value">${classes.length}</div><div class="stat-sub">Classes</div></div>
+      <div class="stat-card"><div class="stat-value">0</div><div class="stat-sub">Pending Invites</div></div>
     </div>
 
     <div class="dash-grid">
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Recent Activity</div>
-        </div>
-        ${recent.map(r => `
-          <div class="activity-item">
-            <span style="font-size:16px;flex-shrink:0;">${r.icon}</span>
-            <div>
-              <div class="activity-text">${r.text}</div>
-              <div class="activity-time">${r.time}</div>
-            </div>
+      <div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header"><div class="card-title">⚡ Quick Actions</div></div>
+          <div class="quick-actions-grid">
+            <button class="quick-action-btn" onclick="navigate('enrollment')">
+              <div class="quick-action-icon" style="background:var(--blue-bg);color:#1e40af;">👤</div>
+              <div class="quick-action-label">Add Student</div>
+            </button>
+            <button class="quick-action-btn" onclick="navigate('staff')">
+              <div class="quick-action-icon" style="background:var(--green-bg);color:#065f46;">🧑‍🏫</div>
+              <div class="quick-action-label">Add Teacher</div>
+            </button>
+            <button class="quick-action-btn" onclick="navigate('classes')">
+              <div class="quick-action-icon" style="background:var(--blue-bg);color:#1e40af;">🏫</div>
+              <div class="quick-action-label">Create Class</div>
+            </button>
+            <button class="quick-action-btn" onclick="navigate('messages')">
+              <div class="quick-action-icon" style="background:#fff7ed;color:#9a3412;">✉️</div>
+              <div class="quick-action-label">Send Message</div>
+            </button>
+            <button class="quick-action-btn" onclick="navigate('attendance')">
+              <div class="quick-action-icon" style="background:var(--green-bg);color:#065f46;">📋</div>
+              <div class="quick-action-label">Take Attendance</div>
+            </button>
+            <button class="quick-action-btn" onclick="navigate('calendar')">
+              <div class="quick-action-icon" style="background:var(--green-bg);color:#065f46;">📅</div>
+              <div class="quick-action-label">Create Event</div>
+            </button>
+            <button class="quick-action-btn" onclick="navigate('tuition')">
+              <div class="quick-action-icon" style="background:var(--yellow-bg);color:#92400e;">💵</div>
+              <div class="quick-action-label">Tuition</div>
+            </button>
+            <button class="quick-action-btn" onclick="navigate('gradebook')">
+              <div class="quick-action-icon" style="background:var(--blue-bg);color:#1e40af;">📊</div>
+              <div class="quick-action-label">Gradebook</div>
+            </button>
           </div>
-        `).join('')}
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">📣 Recent Announcements</div><button class="btn btn-secondary btn-sm" onclick="navigate('messages')">New +</button></div>
+          ${recentAnnouncements.length === 0 ? `
+            <div class="schedule-empty"><div class="si">📣</div><div class="st">No announcements yet</div><div class="ss">Messages sent to parents will appear here.</div></div>
+          ` : recentAnnouncements.map(m => `
+            <div class="activity-item">
+              <span style="font-size:16px;flex-shrink:0;">📨</span>
+              <div>
+                <div class="activity-text"><strong>${m.subject}</strong> — ${m.to}</div>
+                <div class="activity-time">${formatDate(m.date)}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
       </div>
 
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title">Students by Class</div>
-          <button class="btn btn-secondary btn-sm" onclick="navigate('classes')">Manage</button>
+      <div class="dash-side-grid">
+        <div class="card">
+          <div class="card-header"><div class="card-title">📆 Today's Schedule</div><a href="#" onclick="event.preventDefault();navigate('calendar')" style="font-size:12px;color:var(--primary);font-weight:600;">View Full ›</a></div>
+          ${classes.length === 0 ? `
+            <div class="schedule-empty"><div class="si">📦</div><div class="st">No classes today</div><div class="ss">Enjoy your free day!</div></div>
+          ` : classes.map(c => `
+            <div class="schedule-item">
+              <div class="schedule-dot"></div>
+              <div><div class="schedule-text">${c.name}</div><div class="schedule-sub">${c.teacher || 'Unassigned'}</div></div>
+            </div>
+          `).join('')}
         </div>
-        ${classes.length === 0
-          ? `<div class="empty-state"><p>No classes yet. <a href="#" onclick="event.preventDefault();navigate('classes')" style="color:var(--primary)">Add one →</a></p></div>`
-          : classes.map(c => {
-              const cnt = DB.getList('students').filter(s => String(s.classId) === String(c.id)).length;
-              return `
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-                  <div>
-                    <div style="font-size:13.5px;font-weight:600;">${c.name}</div>
-                    <div style="font-size:12px;color:var(--text3);">${c.teacher}</div>
-                  </div>
-                  <span class="badge badge-blue">${cnt} students</span>
-                </div>
-              `;
-            }).join('')
-        }
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">🕐 Recent Activity</div></div>
+          ${activityItems.length === 0 ? `
+            <div class="schedule-empty"><div class="si">🔔</div><div class="st">Nothing yet</div><div class="ss">Activity will show up here.</div></div>
+          ` : activityItems.map(r => `
+            <div class="activity-item">
+              <span class="activity-dot" style="background:var(--primary);margin-top:7px;"></span>
+              <div>
+                <div class="activity-text">${r.text}</div>
+                <div class="activity-time">${r.time}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
       </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="card-header"><div class="card-title">🏫 Classes Overview</div><button class="btn btn-secondary btn-sm" onclick="navigate('classes')">Manage</button></div>
+      ${classes.length === 0
+        ? `<div class="empty-state"><p>No classes yet. <a href="#" onclick="event.preventDefault();navigate('classes')" style="color:var(--primary)">Add one →</a></p></div>`
+        : `<div class="table-wrap"><table>
+            <thead><tr><th>Class</th><th>Teacher</th><th>Students</th></tr></thead>
+            <tbody>
+              ${classes.map(c => {
+                const cnt = students.filter(s => String(s.classId) === String(c.id)).length;
+                return `<tr><td style="font-weight:600;color:var(--text);">${c.name}</td><td>${c.teacher || '—'}</td><td><span class="badge badge-blue">${cnt} students</span></td></tr>`;
+              }).join('')}
+            </tbody>
+          </table></div>`
+      }
     </div>
   `;
 }
@@ -824,27 +916,44 @@ function removeClass(id) {
 // =============================================
 // PAGE: ATTENDANCE
 // =============================================
+// Weekly attendance grid state
+let _attWeekStart = mondayOf(new Date());
+let _attClassFilter = '';
+
+function mondayOf(d) {
+  const dt = new Date(d);
+  const day = dt.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  dt.setDate(dt.getDate() + diff);
+  dt.setHours(0, 0, 0, 0);
+  return dt;
+}
+function isoDate(d) { return d.toISOString().split('T')[0]; }
+
 function attendance() {
-  const attDate = today();
-  // Clear any stale pending marks from previous session
-  Object.keys(pendingAtt).forEach(k => delete pendingAtt[k]);
-
-  document.getElementById('topbarActions').innerHTML = `
-    <input type="date" class="form-input" id="attDate" value="${attDate}" onchange="renderAttendanceDate(this.value)" style="width:160px;padding:7px 10px;font-size:13px;" />
-  `;
-
-  renderAttendanceDate(attDate);
+  _attWeekStart = mondayOf(new Date());
+  document.getElementById('topbarActions').innerHTML = '';
+  renderAttendanceWeek();
 }
 
-function renderAttendanceDate(date) {
+function renderAttendanceWeek() {
   const classList = DB.getList('classes');
-  const students = DB.getList('students');
-  const records = DB.getList('attendance').filter(a => a.date === date);
+  let students = DB.getList('students').filter(s => s.status === 'active');
+  if (_attClassFilter) students = students.filter(s => String(s.classId) === String(_attClassFilter));
+
+  const weekDates = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(_attWeekStart);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
+  const todayIso = today();
+  const records = DB.getList('attendance');
+  const weekStartLabel = weekDates[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const weekEndLabel = weekDates[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   document.getElementById('mainContent').innerHTML = `
     <div class="page-header">
-      <div><h2>Attendance</h2><p>${formatDate(date)}</p></div>
-      <button class="btn btn-primary" onclick="saveAllAttendance('${date}')">Save Attendance</button>
+      <div><h2>Attendance</h2><p>Track and manage student attendance</p></div>
     </div>
 
     ${classList.length === 0 ? `
@@ -853,88 +962,96 @@ function renderAttendanceDate(date) {
         <h3>No classes yet</h3>
         <p>Add classes first before taking attendance.</p>
         <button class="btn btn-primary" onclick="navigate('classes')">Add Class</button>
-      </div>` :
-      `<div class="att-grid" id="attGrid">
-        ${classList.map(cls => {
-          const classStudents = students.filter(s => String(s.classId) === String(cls.id) && s.status === 'active');
-          return `
-            <div class="att-class-card">
-              <div class="att-class-name">${cls.name} <span style="font-size:12px;color:var(--text3);font-weight:400;">— ${cls.teacher}</span></div>
-              ${classStudents.length === 0
-                ? `<p style="font-size:13px;color:var(--text3);">No students in this class.</p>`
-                : classStudents.map(s => {
-                    const rec = records.find(r => r.studentId == s.id);
-                    const status = rec ? rec.status : '';
-                    return `
-                      <div class="att-student-row" data-student-id="${s.id}">
-                        <div class="att-student-name">
-                          <div class="student-avatar" style="width:26px;height:26px;font-size:10px;background:${avatarColor(s.firstName+s.lastName)}">${initials(s.firstName,s.lastName)}</div>
-                          ${s.firstName} ${s.lastName}
-                        </div>
-                        <div class="att-btns">
-                          <button class="att-btn att-btn-p ${status==='present'?'selected-p':''}" title="Present" onclick="markAtt(this,'${s.id}','present')">P</button>
-                          <button class="att-btn att-btn-a ${status==='absent'?'selected-a':''}" title="Absent" onclick="markAtt(this,'${s.id}','absent')">A</button>
-                          <button class="att-btn att-btn-l ${status==='late'?'selected-l':''}" title="Late" onclick="markAtt(this,'${s.id}','late')">L</button>
-                        </div>
-                      </div>
-                    `;
-                  }).join('')}
-              <div style="margin-top:12px;display:flex;gap:6px;">
-                <button class="btn btn-secondary btn-sm" onclick="markAllInClass('${cls.id}','present','${date}')">All Present</button>
-              </div>
-            </div>
-          `;
-        }).join('')}
+      </div>` : `
+      <div class="att-toolbar">
+        <div class="att-toolbar-select">
+          <span>🏫</span>
+          <select onchange="_attClassFilter=this.value;renderAttendanceWeek();">
+            <option value="">All Classes</option>
+            ${classList.map(c => `<option value="${c.id}" ${String(_attClassFilter)===String(c.id)?'selected':''}>${c.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="att-week-nav">
+          <button onclick="_attWeekStart.setDate(_attWeekStart.getDate()-7);renderAttendanceWeek();">‹</button>
+          <span class="att-week-label">📅 ${weekStartLabel} – ${weekEndLabel}</span>
+          <button onclick="_attWeekStart.setDate(_attWeekStart.getDate()+7);renderAttendanceWeek();">›</button>
+        </div>
+        <button class="btn btn-secondary" onclick="markAllPresentToday()">Actions ▾</button>
+      </div>
+
+      <div class="att-week-table-wrap">
+        <table class="att-week-table">
+          <thead>
+            <tr>
+              <th class="att-stu-col">Student Name</th>
+              ${weekDates.map(d => {
+                const iso = isoDate(d);
+                const isToday = iso === todayIso;
+                return `<th class="${isToday ? 'att-today' : ''}">
+                  <div class="att-date-day">${isToday ? 'Today' : d.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                  <div class="att-date-sub">${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                </th>`;
+              }).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${students.length === 0 ? `<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:30px;">No students found.</td></tr>` : students.map(s => `
+              <tr data-student-id="${s.id}">
+                <td class="att-stu-col">
+                  <div class="att-week-row-name">
+                    <div class="student-avatar" style="background:${avatarColor(s.firstName+s.lastName)}">${initials(s.firstName,s.lastName)}</div>
+                    <div>
+                      <div class="att-week-row-name-text">${s.firstName} ${s.lastName}</div>
+                      <div class="att-week-row-name-sub">ID ${String(s.id).slice(-2)}</div>
+                    </div>
+                  </div>
+                </td>
+                ${weekDates.map(d => {
+                  const iso = isoDate(d);
+                  const future = iso > todayIso;
+                  const rec = records.find(r => String(r.studentId) === String(s.id) && r.date === iso);
+                  const status = rec ? rec.status : '';
+                  const label = status === 'present' ? 'Present' : status === 'absent' ? 'Absent' : status === 'late' ? 'Late' : '—';
+                  const cls = future ? 'is-future' : status ? `is-${status}` : '';
+                  return `<td><span class="att-cell-pill ${cls}" ${future ? '' : `onclick="cycleAttCell(this,'${s.id}','${iso}')"`}>${label}</span></td>`;
+                }).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
       </div>`
     }
   `;
 }
 
-// track pending att changes in memory
-const pendingAtt = {};
-function markAtt(btn, studentId, status) {
-  const row = btn.closest('.att-student-row');
-  row.querySelectorAll('.att-btn').forEach(b => b.className = b.className.replace(/selected-[pla]/g, ''));
-  btn.classList.add('selected-' + status[0]);
-  pendingAtt[studentId] = status;
+const ATT_CYCLE = ['', 'present', 'absent', 'late'];
+function cycleAttCell(el, studentId, date) {
+  const records = DB.getList('attendance');
+  const rec = records.find(r => String(r.studentId) === String(studentId) && r.date === date);
+  const current = rec ? rec.status : '';
+  const next = ATT_CYCLE[(ATT_CYCLE.indexOf(current) + 1) % ATT_CYCLE.length];
+
+  if (rec) {
+    if (next === '') DB.remove('attendance', rec.id);
+    else DB.update('attendance', rec.id, { status: next });
+  } else if (next !== '') {
+    DB.push('attendance', { studentId: String(studentId), date, status: next });
+  }
+
+  el.className = 'att-cell-pill' + (next ? ` is-${next}` : '');
+  el.textContent = next === 'present' ? 'Present' : next === 'absent' ? 'Absent' : next === 'late' ? 'Late' : '—';
+  toast(next ? `Marked ${next} ✓` : 'Cleared', 'success');
 }
 
-function markAllInClass(classId, status, date) {
-  const classStudents = DB.getList('students').filter(s => String(s.classId) === String(classId) && s.status === 'active');
-  const studentIds = new Set(classStudents.map(s => String(s.id)));
-  classStudents.forEach(s => { pendingAtt[s.id] = status; });
-  // Update UI using data attributes instead of parsing onclick
-  document.querySelectorAll('.att-student-row').forEach(row => {
-    const sid = row.dataset.studentId;
-    if (sid && studentIds.has(String(sid))) {
-      row.querySelectorAll('.att-btn').forEach(b => b.className = b.className.replace(/selected-[pla]/g, ''));
-      const target = row.querySelector(`.att-btn-${status[0]}`);
-      if (target) target.classList.add('selected-' + status[0]);
-    }
-  });
-}
-
-function saveAllAttendance(date) {
-  const existing = DB.getList('attendance').filter(a => a.date !== date);
-  // Collect all marks from UI (source of truth — includes both clicked and pre-loaded records)
-  const uiRecords = [];
-  document.querySelectorAll('.att-student-row').forEach(row => {
-    const sid = row.dataset.studentId;
-    if (!sid) return;
-    const selected = row.querySelector('.att-btn[class*="selected-"]');
-    if (selected) {
-      const st = selected.classList.contains('selected-p') ? 'present' : selected.classList.contains('selected-a') ? 'absent' : 'late';
-      uiRecords.push({ id: Date.now() + Math.random(), studentId: sid, status: st, date });
-    }
-  });
-  // Fall back to pendingAtt for any student not in UI (shouldn't happen, but safe)
-  Object.entries(pendingAtt).forEach(([studentId, status]) => {
-    if (!uiRecords.find(r => r.studentId == studentId)) {
-      uiRecords.push({ id: Date.now() + Math.random(), studentId, status, date });
-    }
-  });
-  DB.set('attendance', [...existing, ...uiRecords]);
-  toast(`Attendance saved for ${formatDate(date)} ✓`, 'success');
+function markAllPresentToday() {
+  let students = DB.getList('students').filter(s => s.status === 'active');
+  if (_attClassFilter) students = students.filter(s => String(s.classId) === String(_attClassFilter));
+  const date = today();
+  const existing = DB.getList('attendance').filter(a => !(a.date === date && students.some(s => String(s.id) === String(a.studentId))));
+  const newRecords = students.map(s => ({ id: Date.now() + Math.random(), studentId: String(s.id), date, status: 'present' }));
+  DB.set('attendance', [...existing, ...newRecords]);
+  toast(`Marked all present for ${formatDate(date)} ✓`, 'success');
+  renderAttendanceWeek();
 }
 
 // =============================================
