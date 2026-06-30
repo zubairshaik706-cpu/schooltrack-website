@@ -984,7 +984,14 @@ function renderAttendanceWeek() {
           <span class="att-week-label">📅 ${weekStartLabel} – ${weekEndLabel}</span>
           <button onclick="_attWeekStart.setDate(_attWeekStart.getDate()+7);renderAttendanceWeek();">›</button>
         </div>
-        <button class="btn btn-secondary" onclick="markAllPresentToday()">Actions ▾</button>
+        <div class="att-actions-menu" style="position:relative;">
+          <button class="btn btn-secondary" onclick="toggleAttActionsMenu(event)">Actions ▾</button>
+          <div class="att-actions-dropdown" id="attActionsDropdown" style="display:none;">
+            <button onclick="closeAttActionsMenu();markAllPresentToday();">✅ Mark All Present (Today)</button>
+            <button onclick="closeAttActionsMenu();clearTodayAttendance();">🗑️ Clear Today's Records</button>
+            <button onclick="closeAttActionsMenu();exportAttendanceWeekCSV();">⬇️ Export Week as CSV</button>
+          </div>
+        </div>
       </div>
 
       <div class="att-week-table-wrap">
@@ -1060,6 +1067,58 @@ function markAllPresentToday() {
   DB.set('attendance', [...existing, ...newRecords]);
   toast(`Marked all present for ${formatDate(date)} ✓`, 'success');
   renderAttendanceWeek();
+}
+
+function clearTodayAttendance() {
+  let students = DB.getList('students').filter(s => s.status === 'active');
+  if (_attClassFilter) students = students.filter(s => String(s.classId) === String(_attClassFilter));
+  const date = today();
+  const ids = new Set(students.map(s => String(s.id)));
+  const remaining = DB.getList('attendance').filter(a => !(a.date === date && ids.has(String(a.studentId))));
+  DB.set('attendance', remaining);
+  toast(`Cleared today's attendance records ✓`, '');
+  renderAttendanceWeek();
+}
+
+function exportAttendanceWeekCSV() {
+  let students = DB.getList('students').filter(s => s.status === 'active');
+  if (_attClassFilter) students = students.filter(s => String(s.classId) === String(_attClassFilter));
+  const weekDates = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(_attWeekStart);
+    d.setDate(d.getDate() + i);
+    return isoDate(d);
+  });
+  const records = DB.getList('attendance');
+  const headers = ['Student', ...weekDates];
+  const rows = students.map(s => {
+    const cells = weekDates.map(date => {
+      const rec = records.find(r => String(r.studentId) === String(s.id) && r.date === date);
+      return rec ? rec.status : '';
+    });
+    return [`${s.firstName} ${s.lastName}`, ...cells].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',');
+  });
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `attendance-${weekDates[0]}-to-${weekDates[6]}.csv`;
+  a.click();
+  toast('Attendance exported as CSV!', 'success');
+}
+
+function toggleAttActionsMenu(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('attActionsDropdown');
+  const opening = dd.style.display === 'none';
+  dd.style.display = opening ? 'flex' : 'none';
+  if (opening) {
+    const closeOnOutsideClick = () => { dd.style.display = 'none'; document.removeEventListener('click', closeOnOutsideClick); };
+    setTimeout(() => document.addEventListener('click', closeOnOutsideClick), 0);
+  }
+}
+function closeAttActionsMenu() {
+  const dd = document.getElementById('attActionsDropdown');
+  if (dd) dd.style.display = 'none';
 }
 
 // =============================================

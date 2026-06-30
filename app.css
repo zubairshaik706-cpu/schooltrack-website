@@ -567,6 +567,17 @@ table.att-week-table { width: 100%; border-collapse: collapse; }
 .att-cell-pill.is-future { cursor: default; opacity: .5; }
 .att-cell-pill:hover:not(.is-future) { filter: brightness(0.97); }
 
+.att-actions-dropdown {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 50;
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg); min-width: 220px; padding: 6px; display: flex; flex-direction: column; gap: 2px;
+}
+.att-actions-dropdown button {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px;
+  font-size: 13px; font-weight: 500; color: var(--text2); text-align: left; width: 100%;
+}
+.att-actions-dropdown button:hover { background: var(--bg); }
+
 /* ===== GRADE INPUT ===== */
 .grade-input {
   width: 60px;
