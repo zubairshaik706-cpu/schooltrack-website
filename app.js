@@ -1243,35 +1243,87 @@ function submitHifz(e) {
 // =============================================
 // PAGE: MESSAGES
 // =============================================
+// =============================================
+// PAGE: MESSAGES
+// =============================================
+let _msgTab = 'all';
+
 function messages() {
+  _msgTab = _msgTab || 'all';
   const msgs = DB.getList('messages');
+  const parents = DB.getList('parents');
 
   document.getElementById('topbarActions').innerHTML = `<button class="btn btn-primary" onclick="openMessageModal()">+ New Message</button>`;
 
+  const tabs = [
+    { id: 'all', label: 'All Messages', count: msgs.length },
+    { id: 'parents', label: 'To Parents', count: msgs.filter(m=>m.recipientType==='parents'||m.recipientType==='parent').length },
+    { id: 'announcement', label: 'Announcements', count: msgs.filter(m=>m.recipientType==='announcement').length },
+  ];
+
+  const filtered = _msgTab === 'all' ? msgs :
+                   _msgTab === 'parents' ? msgs.filter(m=>m.recipientType==='parents'||m.recipientType==='parent') :
+                   msgs.filter(m=>m.recipientType==='announcement');
+
+  const statusBadge = m => {
+    if (m.sentViaEmail) return `<span class="badge badge-green">✓ Emailed</span>`;
+    if (m.recipientType==='announcement') return `<span class="badge badge-blue">📣 Announcement</span>`;
+    return `<span class="badge badge-gray">Saved</span>`;
+  };
+
   document.getElementById('mainContent').innerHTML = `
     <div class="page-header">
-      <div><h2>Messages</h2><p>Log announcements and notes for your records</p></div>
+      <div><h2>Messages</h2><p>Send messages to parents and log school announcements</p></div>
+    </div>
+
+    ${parents.length === 0 ? `
+    <div style="background:var(--yellow-bg);border:1px solid #fde68a;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#92400e;">
+      <strong>Tip:</strong> Add parent accounts in <a href="#" onclick="navigate('settings')" style="color:#92400e;font-weight:700;text-decoration:underline;">Settings → Parent Portal</a> to send them email messages directly.
+    </div>` : ''}
+
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      ${tabs.map(t => `
+        <button onclick="_msgTab='${t.id}';messages();"
+          style="padding:7px 16px;border-radius:8px;border:1px solid ${_msgTab===t.id?'var(--primary)':'var(--border2)'};
+          background:${_msgTab===t.id?'var(--primary)':'#fff'};color:${_msgTab===t.id?'#fff':'var(--text2)'};
+          font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;">
+          ${t.label} <span style="opacity:.7;font-weight:400;">(${t.count})</span>
+        </button>`).join('')}
     </div>
 
     <div class="card">
-      ${msgs.length === 0 ? `
+      ${filtered.length === 0 ? `
         <div class="empty-state">
-          <div class="empty-state-icon">📣</div>
+          <div class="empty-state-icon">📨</div>
           <h3>No messages yet</h3>
-          <p>Log your first announcement or message.</p>
+          <p>${_msgTab==='all'?'Send your first message to parents or create a school announcement.':
+              _msgTab==='parents'?'No parent messages yet. Click "+ New Message" to reach parents.':
+              'No announcements yet.'}</p>
           <button class="btn btn-primary" onclick="openMessageModal()">+ New Message</button>
         </div>` : `
         <div class="table-wrap">
           <table>
-            <thead><tr><th>To</th><th>Subject</th><th>Message</th><th>Date</th><th></th></tr></thead>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>To</th>
+                <th>Subject</th>
+                <th>Preview</th>
+                <th>Date</th>
+                <th></th>
+              </tr>
+            </thead>
             <tbody>
-              ${msgs.slice().reverse().map(m => `
-                <tr>
-                  <td><span class="badge badge-blue">${m.to}</span></td>
-                  <td><strong>${m.subject}</strong></td>
-                  <td style="color:var(--text3);max-width:300px;">${m.body.substring(0,80)}${m.body.length>80?'…':''}</td>
-                  <td style="color:var(--text3);font-size:12px;">${formatDate(m.date)}</td>
-                  <td><button class="btn btn-danger btn-sm" onclick="removeMessage('${m.id}')">Delete</button></td>
+              ${filtered.slice().reverse().map(m => `
+                <tr style="cursor:pointer;" onclick="viewMessage('${m.id}')">
+                  <td onclick="event.stopPropagation()">${statusBadge(m)}</td>
+                  <td style="font-size:13px;font-weight:600;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.to}</td>
+                  <td><strong style="font-size:13px;">${m.subject}</strong></td>
+                  <td style="color:var(--text3);font-size:13px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.body.replace(/\n/g,' ').substring(0,70)}${m.body.length>70?'…':''}</td>
+                  <td style="color:var(--text3);font-size:12px;white-space:nowrap;">${formatDate(m.date)}</td>
+                  <td onclick="event.stopPropagation()">
+                    <button class="btn btn-danger btn-sm" onclick="removeMessage('${m.id}')">Delete</button>
+                  </td>
                 </tr>
               `).join('')}
             </tbody>
@@ -1281,20 +1333,75 @@ function messages() {
   `;
 }
 
+function viewMessage(id) {
+  const m = DB.find('messages', id);
+  if (!m) return;
+  openModal(m.subject, `
+    <div style="display:flex;gap:16px;margin-bottom:18px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:140px;">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:3px;">To</div>
+        <div style="font-size:14px;font-weight:600;">${m.to}</div>
+      </div>
+      <div style="flex:1;min-width:140px;">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:3px;">Date</div>
+        <div style="font-size:14px;">${formatDate(m.date)}</div>
+      </div>
+      <div style="flex:1;min-width:140px;">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:3px;">Status</div>
+        <div style="font-size:13px;">${m.sentViaEmail ? '✅ Sent via email' : m.recipientType==='announcement' ? '📣 School announcement' : '💾 Saved to records'}</div>
+      </div>
+    </div>
+    ${m.emails && m.emails.length ? `
+    <div style="margin-bottom:14px;">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:6px;">Email Recipients</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${m.emails.map(e=>`<span class="badge badge-blue">${e}</span>`).join('')}
+      </div>
+    </div>` : ''}
+    <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px;">Message</div>
+    <div style="background:var(--bg);border-radius:10px;padding:16px;font-size:14px;line-height:1.7;white-space:pre-wrap;color:var(--text2);">${m.body}</div>
+    ${m.emails && m.emails.length ? `
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+      <a href="mailto:${m.emails.join(',')}&subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}"
+        class="btn btn-primary" style="text-decoration:none;display:inline-block;">
+        📧 Open in Email Client
+      </a>
+    </div>` : ''}
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+      <button class="btn btn-danger" onclick="removeMessage('${m.id}');closeModal();">Delete</button>
+    </div>
+  `);
+}
+
 function openMessageModal() {
+  const parents = DB.getList('parents');
   const classes = DB.getList('classes');
-  const classOptions = classes.map(c => `<option>${c.name} — Parents</option>`).join('');
+  const students = DB.getList('students');
+
+  // Build recipient options
+  const parentEmails = parents.map(p=>p.email).filter(Boolean);
+  const parentOpts = parents.map(p => {
+    const childNames = (p.studentIds||[]).map(sid=>{const s=students.find(s=>String(s.id)===String(sid));return s?s.firstName+' '+s.lastName:'';}).filter(Boolean).join(', ');
+    return `<option value="parent:${p.id}">${p.name}${childNames?' ('+childNames+')':''}</option>`;
+  }).join('');
+
   openModal('New Message', `
     <form onsubmit="submitMessage(event)" class="form-grid">
       <div class="form-group">
-        <label class="form-label">To <span class="required">*</span></label>
-        <select class="form-select" name="to" required>
-          <option value="">Select recipients…</option>
-          <option>All Parents</option>
-          <option>All Teachers</option>
-          <option>All Students</option>
-          ${classOptions}
+        <label class="form-label">Recipient Type <span class="required">*</span></label>
+        <select class="form-select" name="recipientType" required onchange="updateRecipientUI(this.value)">
+          <option value="">Choose type…</option>
+          <option value="parents">All Parents${parentEmails.length?' ('+parentEmails.length+' email'+(parentEmails.length!==1?'s':'')+')':' — no emails on file'}</option>
+          ${parents.map(p=>`<option value="parent:${p.id}">${p.name} — parent of ${(p.studentIds||[]).map(sid=>{const s=students.find(s=>String(s.id)===String(sid));return s?s.firstName:'';}).filter(Boolean).join(', ')||'?'}</option>`).join('')}
+          ${classes.map(c=>`<option value="class:${c.id}">${c.name} — class parents</option>`).join('')}
+          <option value="announcement">School-wide Announcement</option>
         </select>
+      </div>
+      <div id="recipientEmailRow" style="display:none;" class="form-group">
+        <label class="form-label">Email Addresses</label>
+        <div id="recipientEmailDisplay" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text3);min-height:38px;"></div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px;">These addresses will be pre-filled when you open your email client.</div>
       </div>
       <div class="form-group">
         <label class="form-label">Subject <span class="required">*</span></label>
@@ -1302,22 +1409,112 @@ function openMessageModal() {
       </div>
       <div class="form-group">
         <label class="form-label">Message <span class="required">*</span></label>
-        <textarea class="form-textarea" name="body" required style="min-height:120px;" placeholder="Dear parents, we would like to inform you…"></textarea>
+        <textarea class="form-textarea" name="body" required style="min-height:130px;"
+          placeholder="Dear parents,&#10;&#10;We would like to inform you…&#10;&#10;JazakAllahu Khayran,&#10;${getUser().schoolName||'School Administration'}"></textarea>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer" style="flex-direction:column;gap:8px;align-items:stretch;">
+        <button type="submit" name="action" value="email" class="btn btn-primary" id="sendEmailBtn" style="display:none;">
+          📧 Send via Email Client &amp; Save
+        </button>
+        <button type="submit" name="action" value="save" class="btn btn-secondary">
+          💾 Save to Records Only
+        </button>
         <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-        <button type="submit" class="btn btn-primary">Save Message</button>
       </div>
     </form>
   `);
 }
 
+function updateRecipientUI(type) {
+  const parents = DB.getList('parents');
+  const students = DB.getList('students');
+  const classes = DB.getList('classes');
+  const emailRow = document.getElementById('recipientEmailRow');
+  const emailDisplay = document.getElementById('recipientEmailDisplay');
+  const sendBtn = document.getElementById('sendEmailBtn');
+
+  let emails = [];
+
+  if (type === 'parents') {
+    emails = parents.map(p=>p.email).filter(Boolean);
+  } else if (type.startsWith('parent:')) {
+    const pid = type.replace('parent:','');
+    const p = parents.find(p=>String(p.id)===String(pid));
+    if (p && p.email) emails = [p.email];
+  } else if (type.startsWith('class:')) {
+    const cid = type.replace('class:','');
+    const classStudents = students.filter(s=>String(s.classId)===String(cid));
+    const sids = new Set(classStudents.map(s=>String(s.id)));
+    emails = parents.filter(p=>(p.studentIds||[]).some(sid=>sids.has(String(sid)))).map(p=>p.email).filter(Boolean);
+  } else if (type === 'announcement') {
+    emails = parents.map(p=>p.email).filter(Boolean);
+  }
+
+  if (emails.length > 0) {
+    emailRow.style.display = '';
+    emailDisplay.innerHTML = emails.map(e=>`<span class="badge badge-blue" style="margin:2px;">${e}</span>`).join(' ');
+    sendBtn.style.display = '';
+  } else if (type && type !== '') {
+    emailRow.style.display = '';
+    emailDisplay.innerHTML = `<span style="color:var(--text4);font-style:italic;">No email addresses on file for this recipient. Add parent accounts in Settings → Parent Portal.</span>`;
+    sendBtn.style.display = 'none';
+  } else {
+    emailRow.style.display = 'none';
+    sendBtn.style.display = 'none';
+  }
+}
+
 function submitMessage(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
-  DB.push('messages', { to: fd.get('to'), subject: fd.get('subject'), body: fd.get('body'), date: today() });
+  const recipientType = fd.get('recipientType');
+  const subject = fd.get('subject').trim();
+  const body = fd.get('body').trim();
+  const action = e.submitter ? e.submitter.value : 'save';
+
+  if (!recipientType) { toast('Please select a recipient.', 'error'); return; }
+  if (!subject) { toast('Please enter a subject.', 'error'); return; }
+  if (!body) { toast('Please write a message.', 'error'); return; }
+
+  // Resolve display name and emails
+  const parents = DB.getList('parents');
+  const students = DB.getList('students');
+  const classes = DB.getList('classes');
+  let toLabel = '';
+  let emails = [];
+
+  if (recipientType === 'parents') {
+    toLabel = 'All Parents';
+    emails = parents.map(p=>p.email).filter(Boolean);
+  } else if (recipientType.startsWith('parent:')) {
+    const pid = recipientType.replace('parent:','');
+    const p = parents.find(p=>String(p.id)===String(pid));
+    toLabel = p ? p.name : 'Parent';
+    if (p && p.email) emails = [p.email];
+  } else if (recipientType.startsWith('class:')) {
+    const cid = recipientType.replace('class:','');
+    const cls = classes.find(c=>String(c.id)===String(cid));
+    const classStudents = students.filter(s=>String(s.classId)===String(cid));
+    const sids = new Set(classStudents.map(s=>String(s.id)));
+    toLabel = cls ? cls.name + ' — Parents' : 'Class Parents';
+    emails = parents.filter(p=>(p.studentIds||[]).some(sid=>sids.has(String(sid)))).map(p=>p.email).filter(Boolean);
+  } else if (recipientType === 'announcement') {
+    toLabel = 'All — School Announcement';
+    emails = parents.map(p=>p.email).filter(Boolean);
+  }
+
+  const sentViaEmail = action === 'email' && emails.length > 0;
+  DB.push('messages', { to: toLabel, subject, body, date: today(), recipientType, emails, sentViaEmail });
+
+  if (sentViaEmail) {
+    const mailtoLink = `mailto:${emails.join(',')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoLink;
+    toast('Message saved! Your email client is opening…', 'success');
+  } else {
+    toast('Message saved to records.', 'success');
+  }
+
   closeModal();
-  toast('Message saved!', 'success');
   messages();
 }
 

@@ -156,12 +156,45 @@ function showPortal(parent) {
   const studentIds = parent.studentIds || [];
   const content = document.getElementById('childrenContent');
 
+  // Messages addressed to this parent or all parents
+  const allMsgs = DB.getList('messages');
+  const myMsgs = allMsgs.filter(m =>
+    m.recipientType === 'announcement' ||
+    m.recipientType === 'parents' ||
+    m.recipientType === 'parent:' + parent.id ||
+    (m.emails && m.emails.includes(parent.email))
+  ).slice().sort((a,b) => b.date > a.date ? 1 : -1);
+
+  let html = '';
+
+  if (myMsgs.length > 0) {
+    html += `
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;margin-bottom:20px;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#0d9488,#065f46);color:#fff;padding:16px 22px;">
+        <div style="font-size:15px;font-weight:800;">📨 Messages from School</div>
+        <div style="font-size:12px;opacity:.8;margin-top:2px;">${myMsgs.length} message${myMsgs.length!==1?'s':''}</div>
+      </div>
+      <div style="padding:16px 22px;display:flex;flex-direction:column;gap:10px;">
+        ${myMsgs.slice(0,5).map(m => `
+          <div style="border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:12px;">
+              <strong style="font-size:14px;">${m.subject}</strong>
+              <span style="font-size:11px;color:#64748b;white-space:nowrap;">${formatDate(m.date)}</span>
+            </div>
+            <div style="font-size:13px;color:#374151;line-height:1.6;white-space:pre-wrap;">${m.body}</div>
+          </div>
+        `).join('')}
+        ${myMsgs.length > 5 ? `<p style="color:#64748b;font-size:13px;text-align:center;">+ ${myMsgs.length-5} older messages</p>` : ''}
+      </div>
+    </div>`;
+  }
+
   if (studentIds.length === 0) {
-    content.innerHTML = '<p style="color:#94a3b8;">No students linked to your account yet. Contact the school office.</p>';
+    content.innerHTML = html + '<p style="color:#94a3b8;">No students linked to your account yet. Contact the school office.</p>';
     return;
   }
 
-  content.innerHTML = studentIds.map(sid => renderChild(sid)).join('');
+  content.innerHTML = html + studentIds.map(sid => renderChild(sid)).join('');
 }
 
 function renderChild(sid) {
@@ -232,7 +265,7 @@ function renderChild(sid) {
               return `<tr>
                 <td style="color:#64748b;font-size:12px;">${formatDate(g.date)}</td>
                 <td>${g.subject}</td>
-                <td>${g.title||'—'}</td>
+                <td>${g.assignment||'—'}</td>
                 <td class="grade-${letter}">${g.score}/${g.total} (${pct}%)</td>
               </tr>`;
             }).join('')}
