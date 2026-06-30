@@ -163,7 +163,7 @@ function showPortal(parent) {
     m.recipientType === 'parents' ||
     m.recipientType === 'parent:' + parent.id ||
     (m.emails && m.emails.includes(parent.email))
-  ).slice().sort((a,b) => b.date > a.date ? 1 : -1);
+  ).slice().sort((a,b) => b.date > a.date ? -1 : 1);
 
   let html = '';
 
@@ -259,7 +259,7 @@ function renderChild(sid) {
           <div class="section-title">Recent Assignments</div>
           <table><thead><tr><th>Date</th><th>Subject</th><th>Title</th><th>Score</th></tr></thead>
           <tbody>
-            ${grades.slice().sort((a,b)=>b.date>a.date?1:-1).slice(0,8).map(g => {
+            ${grades.slice().sort((a,b)=>b.date>a.date?-1:1).slice(0,8).map(g => {
               const pct = Math.round(g.score / g.total * 100);
               const letter = pct>=90?'A':pct>=80?'B':pct>=70?'C':pct>=60?'D':'F';
               return `<tr>
@@ -277,7 +277,7 @@ function renderChild(sid) {
           <div class="section-title">Recent Attendance</div>
           <table><thead><tr><th>Date</th><th>Status</th></tr></thead>
           <tbody>
-            ${att.slice().sort((a,b)=>b.date>a.date?1:-1).slice(0,10).map(a => `
+            ${att.slice().sort((a,b)=>b.date>a.date?-1:1).slice(0,10).map(a => `
               <tr>
                 <td style="color:#64748b;font-size:12px;">${formatDate(a.date)}</td>
                 <td><span class="pill ${a.status==='present'?'pill-green':a.status==='absent'?'pill-red':'pill-yellow'}">${a.status}</span></td>
@@ -300,13 +300,15 @@ function renderChild(sid) {
         ${latestHifz ? `
         <div class="section">
           <div class="section-title">Hifz Progress</div>
-          <table><thead><tr><th>Surah</th><th>Juz</th><th>Status</th><th>Updated</th></tr></thead>
+          <table><thead><tr><th>Date</th><th>Sabaq</th><th>Sabqi</th><th>Manzil</th><th>Juz</th><th>Notes</th></tr></thead>
           <tbody>
-            ${hifz.slice().sort((a,b)=>b.date>a.date?1:-1).slice(0,5).map(h => `<tr>
-              <td>${h.surahName||h.surah||'—'}</td>
-              <td>${h.juz||'—'}</td>
-              <td><span class="pill pill-done" style="text-transform:capitalize;">${h.status||'—'}</span></td>
+            ${hifz.slice().sort((a,b)=>b.date>a.date?-1:1).slice(0,5).map(h => `<tr>
               <td style="color:#64748b;font-size:12px;">${formatDate(h.date)}</td>
+              <td>${h.sabaq||'—'}</td>
+              <td>${h.sabqi||'—'}</td>
+              <td>${h.manzil||'—'}</td>
+              <td>${h.juz!=null&&h.juz!==''?h.juz:'—'}</td>
+              <td style="color:#64748b;font-size:12px;">${h.notes||'—'}</td>
             </tr>`).join('')}
           </tbody></table>
         </div>` : ''}

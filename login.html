@@ -109,7 +109,7 @@
   </div>
 </div>
 <script>
-  if (localStorage.getItem('st_user')) window.location.href = 'app.html';
+  if (localStorage.getItem('st_user') || localStorage.getItem('st_staff_session')) window.location.href = 'app.html';
 
   document.getElementById('loginForm').addEventListener('submit', function(e) {
     e.preventDefault();

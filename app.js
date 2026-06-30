@@ -15,13 +15,17 @@ const DB = {
 };
 
 // ===== AUTH =====
-function getUser() { return DB.get('user'); }
+function getUser() { return DB.get('user') || DB.get('staff_session'); }
 function requireAuth() {
   const user = getUser();
   if (!user) { window.location.href = 'login.html'; return null; }
   return user;
 }
-function logout() { localStorage.removeItem('st_user'); window.location.href = 'login.html'; }
+function logout() {
+  localStorage.removeItem('st_user');
+  localStorage.removeItem('st_staff_session');
+  window.location.href = 'login.html';
+}
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -160,7 +164,7 @@ function dashboard() {
       <div class="stat-card">
         <div class="stat-icon">📈</div>
         <div class="stat-label">Avg. Grade</div>
-        <div class="stat-value">${grades.length ? Math.round(grades.reduce((a,g)=>a+g.score,0)/grades.length) + '%' : '—'}</div>
+        <div class="stat-value">${grades.length ? Math.round(grades.reduce((a,g)=>a+(g.score/g.total*100),0)/grades.length) + '%' : '—'}</div>
         <div class="stat-sub">${grades.length ? 'All subjects' : 'No grades yet'}</div>
       </div>
     </div>
@@ -484,7 +488,7 @@ function submitEditStudent(e, id) {
   });
   closeModal();
   toast('Student updated!', 'success');
-  renderStudentList('active');
+  renderStudentList(_currentStudentFilter, '', _currentStudentGender);
 }
 
 let _currentStudentFilter = 'active';
@@ -494,7 +498,7 @@ function removeStudent(id, fromModal = false) {
   DB.remove('students', id);
   toast('Student removed.', '');
   if (fromModal) closeModal();
-  renderStudentList(_currentStudentFilter);
+  renderStudentList(_currentStudentFilter, '', _currentStudentGender);
 }
 
 // =============================================
@@ -877,7 +881,7 @@ function markAtt(btn, studentId, status) {
 }
 
 function markAllInClass(classId, status, date) {
-  const classStudents = DB.getList('students').filter(s => s.classId === classId && s.status === 'active');
+  const classStudents = DB.getList('students').filter(s => String(s.classId) === String(classId) && s.status === 'active');
   const studentIds = new Set(classStudents.map(s => String(s.id)));
   classStudents.forEach(s => { pendingAtt[s.id] = status; });
   // Update UI using data attributes instead of parsing onclick
@@ -958,12 +962,12 @@ function gradebook() {
               const subjectAvgs = subjects.map(sub => {
                 const subGrades = grades.filter(g => g.studentId == s.id && g.subject === sub);
                 if (!subGrades.length) return '<td style="color:var(--text4)">—</td>';
-                const avg = Math.round(subGrades.reduce((a,g)=>a+g.score,0)/subGrades.length);
+                const avg = Math.round(subGrades.reduce((a,g)=>a+(g.score/g.total*100),0)/subGrades.length);
                 const color = avg>=90?'var(--green)':avg>=70?'var(--text2)':'var(--red)';
                 return `<td style="font-weight:600;color:${color}">${avg}%</td>`;
               });
               const allGrades = grades.filter(g => g.studentId == s.id);
-              const overall = allGrades.length ? Math.round(allGrades.reduce((a,g)=>a+g.score,0)/allGrades.length) : null;
+              const overall = allGrades.length ? Math.round(allGrades.reduce((a,g)=>a+(g.score/g.total*100),0)/allGrades.length) : null;
               return `
                 <tr>
                   <td>
@@ -1233,7 +1237,7 @@ function submitHifz(e) {
   const fd = new FormData(e.target);
   const studentId = fd.get('studentId');
   const juz = fd.get('juz');
-  DB.push('hifz', { studentId, date: fd.get('date'), sabaq: fd.get('sabaq'), sabqi: fd.get('sabqi'), manzil: fd.get('manzil'), mistakes: fd.get('mistakes') ? parseInt(fd.get('mistakes')) : null, notes: fd.get('notes') });
+  DB.push('hifz', { studentId, date: fd.get('date'), sabaq: fd.get('sabaq'), sabqi: fd.get('sabqi'), manzil: fd.get('manzil'), mistakes: fd.get('mistakes') ? parseInt(fd.get('mistakes')) : null, notes: fd.get('notes'), juz: juz ? parseInt(juz) : null });
   if (juz) DB.update('students', studentId, { juz: parseInt(juz) });
   closeModal();
   toast('Hifz session logged! 📖', 'success');
@@ -1644,7 +1648,7 @@ function changePassword(e) {
 }
 
 function exportData() {
-  const data = { students: DB.getList('students'), classes: DB.getList('classes'), grades: DB.getList('grades'), attendance: DB.getList('attendance'), hifz: DB.getList('hifz'), messages: DB.getList('messages') };
+  const data = { students: DB.getList('students'), classes: DB.getList('classes'), grades: DB.getList('grades'), attendance: DB.getList('attendance'), hifz: DB.getList('hifz'), messages: DB.getList('messages'), tuition: DB.getList('tuition'), salah: DB.getList('salah'), events: DB.getList('events'), quizzes: DB.getList('quizzes'), staff: DB.getList('staff'), parents: DB.getList('parents') };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -1674,8 +1678,8 @@ function exportStudentsCSV() {
 }
 
 function clearAllData() {
-  if (!confirm('This will delete ALL students, classes, grades, and attendance. Are you sure?')) return;
-  ['students','classes','grades','attendance','hifz','messages'].forEach(k => localStorage.removeItem('st_' + k));
+  if (!confirm('This will delete ALL school data. Are you sure?')) return;
+  ['students','classes','grades','attendance','hifz','messages','tuition','salah','events','quizzes','staff','parents'].forEach(k => localStorage.removeItem('st_' + k));
   toast('All data cleared.', '');
   navigate('dashboard');
 }
@@ -1942,7 +1946,8 @@ function removeTuitionEntry(id, studentId) {
   if (!confirm('Delete this entry?')) return;
   DB.remove('tuition', id);
   toast('Entry removed.', '');
-  viewStudentTuition(studentId);
+  closeModal();
+  setTimeout(() => viewStudentTuition(studentId), 50);
 }
 
 // =============================================
@@ -1975,7 +1980,7 @@ function openReportCardModal() {
 }
 
 function loadStudentsForReport(classId) {
-  const students = DB.getList('students').filter(s => s.classId === classId && s.status === 'active');
+  const students = DB.getList('students').filter(s => String(s.classId) === String(classId) && s.status === 'active');
   const sel = document.getElementById('reportStudentSel');
   if (sel) sel.innerHTML = `<option value="all">All Students</option>` + students.map(s => `<option value="${s.id}">${s.firstName} ${s.lastName}</option>`).join('');
 }
@@ -1987,7 +1992,7 @@ function generateReportCard(e) {
   const studentId = fd.get('studentId');
   const cls = DB.find('classes', classId);
   const user = getUser();
-  let studentList = DB.getList('students').filter(s => s.classId === classId && s.status === 'active');
+  let studentList = DB.getList('students').filter(s => String(s.classId) === String(classId) && s.status === 'active');
   if (studentId !== 'all') studentList = studentList.filter(s => String(s.id) === String(studentId));
   if (studentList.length === 0) { toast('No students found.', 'error'); return; }
 
@@ -2051,6 +2056,7 @@ ${studentList.map(s => {
 </body></html>`;
 
   const w = window.open('', '_blank');
+  if (!w) { toast('Popup blocked — please allow popups and try again.', 'error'); return; }
   w.document.write(html);
   w.document.close();
   closeModal();
