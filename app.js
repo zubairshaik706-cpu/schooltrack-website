@@ -227,32 +227,40 @@ function dashboard() {
               <div class="quick-action-label">Add Student</div>
             </button>
             <button class="quick-action-btn" onclick="navigate('staff')">
-              <div class="quick-action-icon" style="background:var(--green-bg);color:#065f46;">🧑‍🏫</div>
+              <div class="quick-action-icon" style="background:var(--green-bg);color:#065f46;">🧑</div>
               <div class="quick-action-label">Add Teacher</div>
             </button>
             <button class="quick-action-btn" onclick="navigate('classes')">
-              <div class="quick-action-icon" style="background:var(--blue-bg);color:#1e40af;">🏫</div>
+              <div class="quick-action-icon" style="background:var(--blue-bg);color:#1e40af;">🖥️</div>
               <div class="quick-action-label">Create Class</div>
             </button>
             <button class="quick-action-btn" onclick="navigate('messages')">
-              <div class="quick-action-icon" style="background:#fff7ed;color:#9a3412;">✉️</div>
-              <div class="quick-action-label">Send Message</div>
+              <div class="quick-action-icon" style="background:var(--yellow-bg);color:#92400e;">✈️</div>
+              <div class="quick-action-label">Send Email</div>
             </button>
-            <button class="quick-action-btn" onclick="navigate('attendance')">
-              <div class="quick-action-icon" style="background:var(--green-bg);color:#065f46;">📋</div>
-              <div class="quick-action-label">Take Attendance</div>
+            <button class="quick-action-btn" onclick="toast('SMS messaging is coming soon.', '')">
+              <div class="quick-action-icon" style="background:var(--green-bg);color:#065f46;">💬</div>
+              <div class="quick-action-label">Send SMS</div>
+            </button>
+            <button class="quick-action-btn" onclick="toast('AI Student Import is coming soon.', '')">
+              <div class="quick-action-icon" style="background:var(--blue-bg);color:#1e40af;">✎</div>
+              <div class="quick-action-label">AI Student Import</div>
+            </button>
+            <button class="quick-action-btn" onclick="toast('Calendar import is coming soon.', '')">
+              <div class="quick-action-icon" style="background:var(--red-bg);color:#991b1b;">🗂️</div>
+              <div class="quick-action-label">Import Calendar</div>
             </button>
             <button class="quick-action-btn" onclick="navigate('calendar')">
               <div class="quick-action-icon" style="background:var(--green-bg);color:#065f46;">📅</div>
               <div class="quick-action-label">Create Event</div>
             </button>
-            <button class="quick-action-btn" onclick="navigate('tuition')">
-              <div class="quick-action-icon" style="background:var(--yellow-bg);color:#92400e;">💵</div>
-              <div class="quick-action-label">Tuition</div>
+            <button class="quick-action-btn" onclick="navigate('messages')">
+              <div class="quick-action-icon" style="background:var(--green-bg);color:#065f46;">📣</div>
+              <div class="quick-action-label">Announcement</div>
             </button>
-            <button class="quick-action-btn" onclick="navigate('gradebook')">
-              <div class="quick-action-icon" style="background:var(--blue-bg);color:#1e40af;">📊</div>
-              <div class="quick-action-label">Gradebook</div>
+            <button class="quick-action-btn" onclick="toast('Academic Years management is coming soon.', '')">
+              <div class="quick-action-icon" style="background:var(--green-bg);color:#065f46;">🗓️</div>
+              <div class="quick-action-label">Academic Years</div>
             </button>
           </div>
         </div>
