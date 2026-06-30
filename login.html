@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log In – SchoolTrack</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f8fafc; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    a { text-decoration: none; }
+
+    .auth-wrap { min-height: 100vh; display: flex; flex-direction: column; }
+
+    .auth-nav {
+      padding: 0 32px; height: 60px;
+      border-bottom: 1px solid #e2e8f0;
+      background: #fff;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; gap: 9px; }
+    .logo-img { width: 26px; height: 26px; }
+    .logo-name { font-size: 16px; font-weight: 800; color: #0f172a; letter-spacing: -.4px; }
+    .nav-aside { font-size: 13.5px; color: #64748b; }
+    .nav-aside a { color: #0d9488; font-weight: 600; }
+    .nav-aside a:hover { color: #0f766e; }
+
+    .auth-page {
+      flex: 1; display: flex;
+      align-items: center; justify-content: center;
+      padding: 48px 24px;
+    }
+
+    .auth-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+
+    .auth-title { font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 4px; letter-spacing: -.5px; }
+    .auth-sub { font-size: 14px; color: #64748b; margin-bottom: 28px; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .form-label { font-size: 13px; font-weight: 600; color: #334155; }
+    .form-input {
+      width: 100%; padding: 10px 13px;
+      border: 1px solid #cbd5e1; border-radius: 8px;
+      font-size: 14px; font-family: inherit; color: #0f172a; background: #fff;
+      transition: border-color .15s, box-shadow .15s; outline: none;
+    }
+    .form-input:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,0.12); }
+    .form-input::placeholder { color: #94a3b8; }
+
+    .btn-submit {
+      width: 100%; padding: 11px;
+      background: #0d9488; color: #fff;
+      font-size: 14.5px; font-weight: 600;
+      border-radius: 8px; border: none; cursor: pointer;
+      margin-top: 6px; transition: background .15s; font-family: inherit;
+    }
+    .btn-submit:hover { background: #0f766e; }
+    .btn-submit:disabled { background: #99d6d1; cursor: not-allowed; }
+
+    .auth-footer { text-align: center; font-size: 13px; color: #64748b; margin-top: 20px; }
+    .auth-footer a { color: #0d9488; font-weight: 600; }
+
+    .error-msg {
+      background: #fef2f2; border: 1px solid #fecaca;
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 13px; color: #991b1b; margin-bottom: 14px; display: none;
+    }
+  </style>
+</head>
+<body>
+<div class="auth-wrap">
+  <nav class="auth-nav">
+    <a href="index.html" class="logo">
+      <img src="assets/logo.svg" alt="SchoolTrack" class="logo-img" />
+      <span class="logo-name">SchoolTrack</span>
+    </a>
+    <span class="nav-aside">New here? <a href="signup.html">Sign up</a></span>
+  </nav>
+  <div class="auth-page">
+    <div class="auth-card">
+      <h1 class="auth-title">Welcome back</h1>
+      <p class="auth-sub">Log in to your SchoolTrack account.</p>
+      <div class="error-msg" id="errorMsg"></div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="email" type="email" required placeholder="sara@alnoor.edu" />
+        </div>
+        <div class="form-group">
+          <div class="form-label-row">
+            <span class="form-label">Password</span>
+          </div>
+          <input class="form-input" id="password" type="password" required placeholder="Your password" />
+        </div>
+        <button class="btn-submit" type="submit" id="submitBtn">Log in →</button>
+      </form>
+      <p class="auth-footer">Don't have an account? <a href="signup.html">Sign up</a></p>
+    </div>
+  </div>
+</div>
+<script>
+  if (localStorage.getItem('st_user')) window.location.href = 'app.html';
+
+  document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const err = document.getElementById('errorMsg');
+    err.style.display = 'none';
+
+    const email = document.getElementById('email').value.trim().toLowerCase();
+    const password = document.getElementById('password').value;
+    const stored = localStorage.getItem('st_user');
+
+    if (!stored) {
+      err.textContent = 'No account found. Please sign up first.';
+      err.style.display = 'block';
+      return;
+    }
+
+    const user = JSON.parse(stored);
+    if (user.email !== email || user.password !== password) {
+      err.textContent = 'Incorrect email or password.';
+      err.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Logging in…';
+    setTimeout(() => window.location.href = 'app.html', 600);
+  });
+</script>
+</body>
+</html>

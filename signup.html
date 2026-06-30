@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up – SchoolTrack</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f8fafc; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    a { text-decoration: none; }
+
+    .auth-wrap { min-height: 100vh; display: flex; flex-direction: column; }
+
+    .auth-nav {
+      padding: 0 32px; height: 60px;
+      border-bottom: 1px solid #e2e8f0;
+      background: #fff;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo { display: flex; align-items: center; gap: 9px; }
+    .logo-img { width: 26px; height: 26px; }
+    .logo-name { font-size: 16px; font-weight: 800; color: #0f172a; letter-spacing: -.4px; }
+    .nav-aside { font-size: 13.5px; color: #64748b; }
+    .nav-aside a { color: #0d9488; font-weight: 600; }
+    .nav-aside a:hover { color: #0f766e; }
+
+    .auth-page {
+      flex: 1; display: flex;
+      align-items: center; justify-content: center;
+      padding: 48px 24px;
+    }
+
+    .auth-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%; max-width: 440px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+
+    .auth-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #f0fdfa; border: 1px solid #ccfbf1;
+      color: #0f766e; border-radius: 99px;
+      padding: 4px 12px; font-size: 12px; font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .auth-badge-dot { width: 5px; height: 5px; border-radius: 50%; background: #0d9488; }
+
+    .auth-title { font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 4px; letter-spacing: -.5px; }
+    .auth-sub { font-size: 14px; color: #64748b; margin-bottom: 26px; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 5px; }
+    .form-input {
+      width: 100%; padding: 10px 13px;
+      border: 1px solid #cbd5e1; border-radius: 8px;
+      font-size: 14px; font-family: inherit; color: #0f172a; background: #fff;
+      transition: border-color .15s, box-shadow .15s; outline: none;
+    }
+    .form-input:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,0.12); }
+    .form-input::placeholder { color: #94a3b8; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .btn-submit {
+      width: 100%; padding: 11px;
+      background: #0d9488; color: #fff;
+      font-size: 14.5px; font-weight: 600;
+      border-radius: 8px; border: none; cursor: pointer;
+      margin-top: 6px; transition: background .15s; font-family: inherit;
+    }
+    .btn-submit:hover { background: #0f766e; }
+    .btn-submit:disabled { background: #99d6d1; cursor: not-allowed; }
+
+    .auth-footer { text-align: center; font-size: 13px; color: #64748b; margin-top: 20px; }
+    .auth-footer a { color: #0d9488; font-weight: 600; }
+
+    .terms { font-size: 12px; color: #94a3b8; text-align: center; margin-top: 16px; line-height: 1.5; }
+    .terms a { color: #64748b; text-decoration: underline; }
+
+    .error-msg {
+      background: #fef2f2; border: 1px solid #fecaca;
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 13px; color: #991b1b; margin-bottom: 14px; display: none;
+    }
+  </style>
+</head>
+<body>
+<div class="auth-wrap">
+  <nav class="auth-nav">
+    <a href="index.html" class="logo">
+      <img src="assets/logo.svg" alt="SchoolTrack" class="logo-img" />
+      <span class="logo-name">SchoolTrack</span>
+    </a>
+    <span class="nav-aside">Already have an account? <a href="login.html">Log in</a></span>
+  </nav>
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-badge"><span class="auth-badge-dot"></span> No credit card required</div>
+      <h1 class="auth-title">Create your account</h1>
+      <p class="auth-sub">Get started with SchoolTrack in under 5 minutes.</p>
+      <div class="error-msg" id="errorMsg"></div>
+      <form id="signupForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">First name</label>
+            <input class="form-input" id="firstName" type="text" required placeholder="Sara" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last name</label>
+            <input class="form-input" id="lastName" type="text" required placeholder="Malik" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">School name</label>
+          <input class="form-input" id="schoolName" type="text" required placeholder="Al-Noor Academy" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="email" type="email" required placeholder="sara@alnoor.edu" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" id="password" type="password" required placeholder="Create a password (min 6 chars)" minlength="6" />
+        </div>
+        <button class="btn-submit" type="submit" id="submitBtn">Create account →</button>
+      </form>
+      <p class="terms">By signing up, you agree to our <a href="terms.html">Terms of Service</a> and <a href="privacy.html">Privacy Policy</a>.</p>
+      <p class="auth-footer">Already have an account? <a href="login.html">Log in</a></p>
+    </div>
+  </div>
+</div>
+<script>
+  // If already logged in, show a notice but still let them create a new account
+  if (localStorage.getItem('st_user')) {
+    const existing = JSON.parse(localStorage.getItem('st_user'));
+    const notice = document.getElementById('errorMsg');
+    notice.style.display = 'block';
+    notice.style.background = '#fffbeb';
+    notice.style.borderColor = '#fde68a';
+    notice.style.color = '#92400e';
+    notice.innerHTML = `You're signed in as <strong>${existing.email}</strong>. <a href="app.html" style="color:#92400e;text-decoration:underline;">Go to dashboard</a> or create a new account below (this will replace your current account).`;
+  }
+
+  document.getElementById('signupForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const err = document.getElementById('errorMsg');
+    err.style.display = 'none';
+
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    const schoolName = document.getElementById('schoolName').value.trim();
+    const email = document.getElementById('email').value.trim().toLowerCase();
+    const password = document.getElementById('password').value;
+
+    if (!firstName || !lastName || !schoolName || !email || !password) {
+      err.textContent = 'Please fill in all fields.';
+      err.style.display = 'block';
+      return;
+    }
+    if (password.length < 6) {
+      err.textContent = 'Password must be at least 6 characters.';
+      err.style.display = 'block';
+      return;
+    }
+
+    if (localStorage.getItem('st_user')) {
+      if (!confirm('This will replace your current account and clear all school data. Continue?')) return;
+      // Wipe everything
+      Object.keys(localStorage).filter(k => k.startsWith('st_')).forEach(k => localStorage.removeItem(k));
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Creating account…';
+
+    setTimeout(() => {
+      const user = { firstName, lastName, schoolName, email, password, createdAt: new Date().toISOString() };
+      localStorage.setItem('st_user', JSON.stringify(user));
+      window.location.href = 'app.html';
+    }, 800);
+  });
+</script>
+</body>
+</html>

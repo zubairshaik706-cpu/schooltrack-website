@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Islamic School Management Software & Hifz Tracker | SchoolTrack</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..900;1,14..32,300..900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ===== ANNOUNCEMENT BANNER ===== -->
+
+<!-- ===== NAVBAR ===== -->
+<header class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="index.html" class="logo">
+      <img src="assets/logo.svg" alt="SchoolTrack" class="logo-img" />
+      <span class="logo-name">SchoolTrack</span>
+    </a>
+
+    <nav class="nav-links" id="navLinks">
+      <div class="nav-item has-dropdown">
+        <button class="nav-btn">Features <svg class="chevron-icon" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <div class="dropdown">
+          <div class="dropdown-grid">
+            <a href="#attendance" class="dropdown-item">
+              <div class="di-icon">📋</div>
+              <div>
+                <div class="di-title">Attendance</div>
+                <div class="di-desc">One-tap check-in with absence alerts</div>
+              </div>
+            </a>
+            <a href="#gradebook" class="dropdown-item">
+              <div class="di-icon">📊</div>
+              <div>
+                <div class="di-title">Gradebook</div>
+                <div class="di-desc">Weighted grades & report cards</div>
+              </div>
+            </a>
+            <a href="#assignments" class="dropdown-item">
+              <div class="di-icon">📝</div>
+              <div>
+                <div class="di-title">Assignments & Quizzes</div>
+                <div class="di-desc">Quiz builder & multi-file uploads</div>
+              </div>
+            </a>
+            <a href="#enrollment" class="dropdown-item">
+              <div class="di-icon">🎓</div>
+              <div>
+                <div class="di-title">Enrollment</div>
+                <div class="di-desc">Custom forms & online applications</div>
+              </div>
+            </a>
+            <a href="#features" class="dropdown-item">
+              <div class="di-icon">📊</div>
+              <div>
+                <div class="di-title">Reports & Export</div>
+                <div class="di-desc">Student data export & record keeping</div>
+              </div>
+            </a>
+            <a href="#features" class="dropdown-item">
+              <div class="di-icon">⚠️</div>
+              <div>
+                <div class="di-title">Infractions</div>
+                <div class="di-desc">Behavior tracking with severity & alerts</div>
+              </div>
+            </a>
+            <a href="#hifz-section" class="dropdown-item">
+              <div class="di-icon">📖</div>
+              <div>
+                <div class="di-title">Hifz Tracking</div>
+                <div class="di-desc">Quran memorization, Juz by Juz</div>
+              </div>
+            </a>
+            <a href="#features" class="dropdown-item">
+              <div class="di-icon">🏫</div>
+              <div>
+                <div class="di-title">Multi-School</div>
+                <div class="di-desc">Run many programs under one org</div>
+              </div>
+            </a>
+            <a href="#features" class="dropdown-item">
+              <div class="di-icon">📅</div>
+              <div>
+                <div class="di-title">Academic Years</div>
+                <div class="di-desc">Terms, semesters & year rollover</div>
+              </div>
+            </a>
+            <a href="#features" class="dropdown-item">
+              <div class="di-icon">🥗</div>
+              <div>
+                <div class="di-title">School Lunch Ordering</div>
+                <div class="di-desc">Pre-order meals, track payments</div>
+              </div>
+            </a>
+            <a href="#features" class="dropdown-item">
+              <div class="di-icon">📈</div>
+              <div>
+                <div class="di-title">Custom Reports</div>
+                <div class="di-desc">Attendance, grade & billing reports</div>
+              </div>
+            </a>
+            <a href="#features" class="dropdown-item">
+              <div class="di-icon">📣</div>
+              <div>
+                <div class="di-title">Parent & Student Comms</div>
+                <div class="di-desc">Announcements & updates to parents</div>
+              </div>
+            </a>
+            <a href="#features" class="dropdown-item coming-soon">
+              <div class="di-icon">🤖</div>
+              <div>
+                <div class="di-title">AI Office Receptionist <span class="soon-badge">Coming soon</span></div>
+                <div class="di-desc">An AI that answers your school's phone, 24/7</div>
+              </div>
+            </a>
+          </div>
+          <div class="dropdown-footer">
+            <a href="features.html" class="view-all-link">View all features →</a>
+          </div>
+        </div>
+      </div>
+      <a href="blog.html" class="nav-btn">Blog</a>
+      <a href="docs.html" class="nav-btn">Docs</a>
+      <a href="contact.html" class="nav-btn">Contact</a>
+
+      <!-- Mobile-only nav actions (shown inside hamburger menu) -->
+      <div class="nav-actions nav-actions-mobile">
+        <a href="login.html" class="btn-login">Log in</a>
+        <a href="signup.html" class="btn-cta">Sign up</a>
+      </div>
+    </nav>
+
+    <!-- Desktop nav actions -->
+    <div class="nav-actions nav-actions-desktop">
+      <a href="login.html" class="btn-login">Log in</a>
+      <a href="signup.html" class="btn-cta">Sign up</a>
+    </div>
+
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-container">
+    <div class="hero-split">
+      <!-- Left -->
+      <div class="hero-left anim">
+        <div class="hero-eyebrow">
+          <span class="hero-eyebrow-dot"></span>
+          Built specifically for Islamic schools
+        </div>
+        <h1 class="hero-title">Run your Islamic school<br /><span class="hero-title-highlight">without the chaos.</span></h1>
+        <p class="hero-sub">SchoolTrack gives maktabs, Hifz academies, weekend programs, and full-time Islamic schools one place to handle everything — attendance, grades, Hifz progress, tuition, and parent updates.</p>
+        <div class="hero-btns">
+          <a href="signup.html" class="btn-primary btn-lg">Sign up free</a>
+          <a href="#features" class="btn-ghost-hero">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd"/></svg>
+            See features
+          </a>
+        </div>
+        <div class="hero-meta">
+          <span class="hero-meta-item">✓ Up in under 5 minutes</span>
+          <span class="hero-meta-dot"></span>
+          <span class="hero-meta-item">✓ No card needed</span>
+          <span class="hero-meta-dot"></span>
+          <span class="hero-meta-item">✓ Free forever</span>
+        </div>
+      </div>
+
+      <!-- Right -->
+      <div class="hero-right anim" style="transition-delay:.12s">
+        <div class="hero-dashboard-wrap">
+          <img src="assets/dashboard.jpg" alt="SchoolTrack Admin Dashboard" style="width:100%;display:block;" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabbed dashboard -->
+  <div class="dashboard-outer">
+    <p class="dashboard-label">Explore every module</p>
+    <div class="dashboard-card">
+      <div class="dashboard-tabs" id="dashTabs">
+        <button class="dash-tab active" data-tab="admin">Admin Dashboard</button>
+        <button class="dash-tab" data-tab="attendance">Attendance</button>
+        <button class="dash-tab" data-tab="gradebook">Gradebook</button>
+        <button class="dash-tab" data-tab="enrollment">Enrollment</button>
+        <button class="dash-tab" data-tab="hifz">Hifz Tracking</button>
+      </div>
+      <div class="dashboard-screens">
+        <img src="assets/dashboard.jpg" alt="Admin Dashboard" class="dash-screen active" id="tab-admin" />
+        <img src="assets/attendance.jpg" alt="Attendance" class="dash-screen" id="tab-attendance" />
+        <img src="assets/gradebook.jpg" alt="Gradebook" class="dash-screen" id="tab-gradebook" />
+        <img src="assets/enrollment.jpg" alt="Enrollment" class="dash-screen" id="tab-enrollment" />
+        <img src="assets/hifz.jpg" alt="Hifz Tracking" class="dash-screen" id="tab-hifz" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Trust badges -->
+  <div class="trust-badges">
+    <div class="trust-badges-inner">
+      <div class="trust-badge">
+        <div class="trust-badge-icon">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        </div>
+        Free to use
+      </div>
+      <div class="trust-badge">
+        <div class="trust-badge-icon">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z"/><path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z"/><path d="M17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z"/></svg>
+        </div>
+        Data stays on your device
+      </div>
+      <div class="trust-badge">
+        <div class="trust-badge-icon">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293z"/></svg>
+        </div>
+        Export your data anytime
+      </div>
+      <div class="trust-badge">
+        <div class="trust-badge-icon">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
+        </div>
+        Up and running in minutes
+      </div>
+      <div class="trust-badge">
+        <div class="trust-badge-icon">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/></svg>
+        </div>
+        Made for Islamic education
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PLATFORM OVERVIEW ===== -->
+<section class="platform-section">
+  <div class="section-container">
+    <p class="overline">One platform, zero spreadsheets</p>
+    <h2 class="section-h2 anim">Stop juggling five different tools.</h2>
+    <p class="section-body anim" style="transition-delay:.1s">Most school software wasn't designed with Islamic education in mind. SchoolTrack was — from Hifz tracking to gender-aware rosters, every feature fits how you actually run your school.</p>
+  </div>
+</section>
+
+<!-- ===== FEATURE TABS ===== -->
+<section class="features-section" id="features">
+  <div class="section-container">
+    <p class="overline">Features</p>
+    <h2 class="section-h2 anim">Everything your school needs</h2>
+    <p class="section-body anim" style="transition-delay:.08s">One platform covering every workflow — from morning attendance to monthly tuition — designed for Islamic schools from day one.</p>
+
+    <div class="feat-layout anim" style="transition-delay:.14s">
+      <!-- Sidebar nav -->
+      <div class="feat-nav">
+        <button class="feat-tab active" data-feat="attendance">
+          <div class="feat-tab-icon">📋</div>
+          <div class="feat-tab-content">
+            <div class="feat-tab-name">Attendance</div>
+            <div class="feat-tab-sub">Take attendance in seconds</div>
+          </div>
+        </button>
+        <button class="feat-tab" data-feat="gradebook">
+          <div class="feat-tab-icon">📊</div>
+          <div class="feat-tab-content">
+            <div class="feat-tab-name">Gradebook</div>
+            <div class="feat-tab-sub">Grades, quizzes & report cards</div>
+          </div>
+        </button>
+        <button class="feat-tab" data-feat="enrollment">
+          <div class="feat-tab-icon">🎓</div>
+          <div class="feat-tab-content">
+            <div class="feat-tab-name">Enrollment</div>
+            <div class="feat-tab-sub">Accept students online</div>
+          </div>
+        </button>
+        <button class="feat-tab" data-feat="hifz">
+          <div class="feat-tab-icon">📖</div>
+          <div class="feat-tab-content">
+            <div class="feat-tab-name">Hifz Tracking</div>
+            <div class="feat-tab-sub">Know every student's progress</div>
+          </div>
+        </button>
+      </div>
+
+      <!-- Display panel -->
+      <div class="feat-display">
+        <div class="feat-panel active" id="feat-attendance">
+          <div class="feat-panel-text">
+            <span class="feature-label">Attendance</span>
+            <h3 class="feature-h3">Take attendance in seconds, not minutes.</h3>
+            <p class="feature-p">Mark every student present, absent, or late in seconds — class by class, every day. Mark the whole class at once or go student by student. Every record is saved and searchable.</p>
+            <div class="feature-callout">
+              <p class="callout-title">Ditch the paper registers</p>
+              <p class="callout-body">Everything that used to live on clipboards, binders, and spreadsheets now lives in one place — accessible from any device, any time.</p>
+            </div>
+            <a href="signup.html" class="btn-primary">Sign up free</a>
+          </div>
+          <div class="feat-panel-img">
+            <img src="assets/attendance.jpg" alt="Attendance" />
+          </div>
+        </div>
+
+        <div class="feat-panel" id="feat-gradebook">
+          <div class="feat-panel-text">
+            <span class="feature-label">Gradebook</span>
+            <h3 class="feature-h3">Grades, assignments, and report cards — all connected.</h3>
+            <p class="feature-p">Build assignments, run quizzes, and set grade weights. Parents see their child's marks the moment they're entered. Report cards generate in one click.</p>
+            <a href="signup.html" class="btn-primary">Sign up free</a>
+          </div>
+          <div class="feat-panel-img">
+            <img src="assets/gradebook.jpg" alt="Gradebook" />
+          </div>
+        </div>
+
+        <div class="feat-panel" id="feat-enrollment">
+          <div class="feat-panel-text">
+            <span class="feature-label">Enrollment</span>
+            <h3 class="feature-h3">Accept students online — no paperwork.</h3>
+            <p class="feature-p">Build custom application forms for any program. Parents apply online, you review and accept — student accounts and first invoices are created automatically.</p>
+            <a href="signup.html" class="btn-primary">Sign up free</a>
+          </div>
+          <div class="feat-panel-img">
+            <img src="assets/enrollment.jpg" alt="Enrollment" />
+          </div>
+        </div>
+
+        <div class="feat-panel" id="feat-hifz">
+          <div class="feat-panel-text">
+            <span class="feature-label">Hifz Tracking</span>
+            <h3 class="feature-h3">Know exactly where every student is in their Hifz.</h3>
+            <p class="feature-p">Log sabaq, sabqi, and manzil for each student every day. Track mistakes, hesitations, and pace — SchoolTrack automatically calculates when each student will complete.</p>
+            <a href="signup.html" class="btn-primary">Sign up free</a>
+          </div>
+          <div class="feat-panel-img">
+            <img src="assets/hifz.jpg" alt="Hifz Tracking" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== WHY SECTION ===== -->
+<section class="why-section">
+  <div class="section-container">
+    <p class="overline">Why SchoolTrack</p>
+    <h2 class="section-h2 anim">Built from the ground up for Islamic education.</h2>
+    <p class="section-body anim" style="transition-delay:.08s">We didn't take a generic school platform and bolt Hifz tracking on as an afterthought. SchoolTrack was designed specifically for Islamic schools — every feature reflects how you actually operate.</p>
+
+    <div class="why-grid anim" style="transition-delay:.14s">
+      <div class="why-card">
+        <div class="why-card-icon">🕌</div>
+        <h4 class="why-card-title">Gender-Aware by Default</h4>
+        <p class="why-card-body">Male teachers see only male students. Cross-gender messaging can be restricted. Proper boundaries are built in — not bolted on — and fully configurable by your admin.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-card-icon">📋</div>
+        <h4 class="why-card-title">Smart Enrollment Forms</h4>
+        <p class="why-card-body">Pre-built templates for Alim Course, Maktab, Hifz, and K-12. A parent submits, you approve, and their invoice is already waiting in their inbox — automatically.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-card-icon">📖</div>
+        <h4 class="why-card-title">Juz-by-Juz Hifz Progress</h4>
+        <p class="why-card-body">Log daily memorization with juz-level detail. Parents see their child's progress in real time, and predicted finish dates keep everyone on track.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-card-icon">🏫</div>
+        <h4 class="why-card-title">One Org, Many Programs</h4>
+        <p class="why-card-body">Run your Alim Course, Maktab, Hifz Program, and K-12 school under a single login. Switch between programs in one click — no separate accounts needed.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-card-icon">🤖</div>
+        <h4 class="why-card-title">AI-Powered Quiz Builder</h4>
+        <p class="why-card-body">Type a topic, get a quiz. SchoolTrack's AI generates multiple question types instantly — auto-graded, with results available the moment students submit.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-card-icon">🔐</div>
+        <h4 class="why-card-title">Permissions That Actually Work</h4>
+        <p class="why-card-body">Give a teacher access to grades but not billing. Make someone read-only. Control exactly what each role can see, create, edit, or delete.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-card-icon">👨‍👩‍👧</div>
+        <h4 class="why-card-title">Portals for Parents & Teachers</h4>
+        <p class="why-card-body">Every parent gets a login to see grades, attendance, and Hifz progress for all their kids. Teachers manage their own classes without needing admin access.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-card-icon">📱</div>
+        <h4 class="why-card-title">Reach Parents Instantly</h4>
+        <p class="why-card-body">Record and send announcements to individual parents, whole classes, or your entire school. Keep a full log of every message sent — no more hunting through WhatsApp groups.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-card-icon">🕋</div>
+        <h4 class="why-card-title">Salah Attendance Tracker</h4>
+        <p class="why-card-body">Log which students prayed at the masjid each day. Build a habit of consistency — with progress visible to both parents and teachers.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-card-icon">📅</div>
+        <h4 class="why-card-title">One School Calendar</h4>
+        <p class="why-card-body">Holidays, events, and class schedules — all in one visual calendar. Drop in a PDF or spreadsheet and let AI parse the whole thing for you.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-card-icon">💳</div>
+        <h4 class="why-card-title">Tuition That Collects Itself</h4>
+        <p class="why-card-body">Track tuition payments and outstanding balances for every family. See who has paid, who hasn't, and the full payment history — all organized and easy to review.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-card-icon">📄</div>
+        <h4 class="why-card-title">Report Cards in One Click</h4>
+        <p class="why-card-body">Professional report cards and transcripts, ready to print or email. Generate them for a whole class at once — no copy-pasting, no formatting headaches.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HIFZ DEEP DIVE ===== -->
+<section class="hifz-section" id="hifz-section">
+  <div class="section-container hifz-inner">
+    <div class="hifz-text anim">
+      <p class="overline-light">Hifz Tracking</p>
+      <h2 class="hifz-title">The Hifz tracker your school actually deserves.</h2>
+      <p class="hifz-body">Every other school platform treats Hifz tracking as a checkbox. SchoolTrack built it from scratch — daily sabaq, sabqi, and manzil logging, juz-by-juz progress, mistake tracking, and predicted completion dates that update automatically. Parents see live progress without having to call the teacher.</p>
+      <ul class="hifz-list">
+        <li>
+          <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+          Daily logs for sabaq, sabqi, and manzil with revision history
+        </li>
+        <li>
+          <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+          Mistakes and hesitations tracked per session
+        </li>
+        <li>
+          <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+          Predicted completion dates based on each student's real pace
+        </li>
+        <li>
+          <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+          One-click PDF progress reports to share with parents
+        </li>
+      </ul>
+    </div>
+    <div class="hifz-image-wrap anim" style="transition-delay:.12s">
+      <img src="assets/hifz_dark.jpg" alt="Hifz Tracking" class="hifz-img" />
+    </div>
+  </div>
+</section>
+
+<!-- ===== GETTING STARTED ===== -->
+<section class="steps-section">
+  <div class="section-container">
+    <p class="overline">Get started</p>
+    <h2 class="section-h2 anim">Up and running before lunch.</h2>
+    <p class="section-body anim" style="transition-delay:.08s">No migration headaches, no IT department needed. Most schools are live in under 10 minutes.</p>
+
+    <div class="steps-grid">
+      <div class="step-card anim">
+        <div class="step-num">1</div>
+        <h4 class="step-title">Sign up</h4>
+        <p class="step-body">Create your school account — takes less than 5 minutes and requires nothing but an email.</p>
+      </div>
+      <div class="step-divider">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="24" height="24"><path d="M5 12h14M12 5l7 7-7 7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="step-card anim" style="transition-delay:.1s">
+        <div class="step-num">2</div>
+        <h4 class="step-title">Set up your school</h4>
+        <p class="step-body">Add your classes, invite your teachers, and let our setup guide walk you through the rest.</p>
+      </div>
+      <div class="step-divider">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="24" height="24"><path d="M5 12h14M12 5l7 7-7 7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="step-card anim" style="transition-delay:.2s">
+        <div class="step-num">3</div>
+        <h4 class="step-title">Go live</h4>
+        <p class="step-body">Start taking attendance, entering grades, and communicating with parents on day one.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section class="faq-section">
+  <div class="section-container faq-inner">
+    <div class="faq-left anim">
+      <p class="overline">Questions & answers</p>
+      <h2 class="section-h2">Still have questions?</h2>
+      <p class="faq-contact-text">Can't find what you're looking for? Our team is made up of people who actually understand Islamic schools — we usually reply within a few hours.</p>
+      <a href="contact.html" class="btn-secondary">Talk to our team</a>
+    </div>
+    <div class="faq-right anim" style="transition-delay:.1s">
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span class="faq-num">01</span>
+          <span class="faq-text">How fast can we actually get started?</span>
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer">
+          <p>Most schools are up and running in under 10 minutes. Create your account, name your classes, add your teachers — and you're taking attendance.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span class="faq-num">02</span>
+          <span class="faq-text">Is our student data safe?</span>
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer">
+          <p>All your school data is stored locally in your browser — nothing is sent to external servers. This means your student records never touch a third-party platform. Use the built-in Export feature to keep regular backups on your own device.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span class="faq-num">03</span>
+          <span class="faq-text">Is there a mobile app?</span>
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer">
+          <p>SchoolTrack runs in any modern browser — on desktop, tablet, or mobile. No app download needed. Just open it on any device and everything works the same way.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span class="faq-num">04</span>
+          <span class="faq-text">Can parents log in and see their children's progress?</span>
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer">
+          <p>Parent-facing portals are on the roadmap. Right now, school admins use SchoolTrack to manage and track everything, then share updates with parents directly. Student and parent login access is coming in a future update.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span class="faq-num">05</span>
+          <span class="faq-text">Is SchoolTrack specifically built for Islamic schools?</span>
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer">
+          <p>Yes — SchoolTrack is a management platform built specifically for Islamic schools, maktabs, Hifz academies, and weekend programs. Hifz tracking, gender-aware rosters, and multi-program scheduling aren't add-ons — they're core features designed from day one.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span class="faq-num">06</span>
+          <span class="faq-text">How does the Hifz tracker work?</span>
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer">
+          <p>Teachers log each student's daily session — sabaq (new memorization), sabqi (recently memorized), and manzil (old revision) — with mistakes noted. SchoolTrack tracks each student's juz-by-juz progress so you always know exactly where every student stands.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggleFaq(this)">
+          <span class="faq-num">07</span>
+          <span class="faq-text">Can we run a weekend school and a full-time program together?</span>
+          <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 9l6 6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="faq-answer">
+          <p>Absolutely — that's one of the most common setups. Create separate classes for your weekend maktab, evening Hifz program, and full-time academy, each with their own students, teachers, and schedules. Everything is managed in one place.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA BANNER ===== -->
+<section class="cta-section">
+  <div class="section-container cta-inner">
+    <h2 class="cta-title anim">Your school deserves better than spreadsheets.</h2>
+    <p class="cta-body anim" style="transition-delay:.08s">Schools that switch to SchoolTrack spend less time on admin and more time on education. See why.</p>
+    <div class="cta-btns anim" style="transition-delay:.14s">
+      <a href="signup.html" class="btn-primary btn-lg">Sign up free</a>
+      <a href="login.html" class="btn-secondary-white btn-lg">Log in</a>
+    </div>
+    <div class="cta-badges anim" style="transition-delay:.2s">
+      <span>🔒 Data stays on your device</span>
+      <span>⚡ Up and running in minutes</span>
+      <span>🤝 Free to use</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="index.html" class="footer-logo">
+          <img src="assets/logo.svg" alt="SchoolTrack" class="logo-img" />
+          <span class="logo-name">SchoolTrack</span>
+        </a>
+        <p>Built for Islamic schools. Trusted by communities.</p>
+      </div>
+      <div class="footer-links-grid">
+        <div class="footer-col">
+          <p class="footer-col-title">Company</p>
+          <a href="about.html">About Us</a>
+          <a href="contact.html">Contact</a>
+          <a href="careers.html">Careers</a>
+        </div>
+        <div class="footer-col">
+          <p class="footer-col-title">Product</p>
+          <a href="docs.html">Docs</a>
+          <a href="blog.html">Blog</a>
+          <a href="security.html">Security</a>
+        </div>
+        <div class="footer-col">
+          <p class="footer-col-title">Legal</p>
+          <a href="privacy.html">Privacy Policy</a>
+          <a href="terms.html">Terms of Service</a>
+          <a href="cookies.html">Cookie Policy</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p class="footer-copy">© 2026 SchoolTrack. All rights reserved.</p>
+      <div class="footer-social">
+        <a href="#" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        </a>
+        <a href="#" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

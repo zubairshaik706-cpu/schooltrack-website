@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page Not Found – SchoolTrack</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #0f172a; -webkit-font-smoothing: antialiased; min-height: 100vh; display: flex; flex-direction: column; }
+    a { text-decoration: none; color: #0d9488; }
+    nav { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 0 32px; height: 64px; display: flex; align-items: center; }
+    .logo { display: flex; align-items: center; gap: 9px; }
+    .logo-img { width: 26px; height: 26px; }
+    .logo-name { font-size: 16px; font-weight: 800; color: #0f172a; letter-spacing: -.4px; }
+    .page { flex: 1; display: flex; align-items: center; justify-content: center; padding: 48px 24px; }
+    .inner { text-align: center; max-width: 420px; }
+    .code { font-size: 80px; font-weight: 900; color: #e2e8f0; letter-spacing: -4px; line-height: 1; margin-bottom: 16px; }
+    h1 { font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 10px; }
+    p { font-size: 15px; color: #64748b; line-height: 1.6; margin-bottom: 32px; }
+    .btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-primary { background: #0d9488; color: #fff; padding: 10px 22px; border-radius: 8px; font-size: 14px; font-weight: 600; transition: background .15s; }
+    .btn-primary:hover { background: #0f766e; }
+    .btn-secondary { background: #fff; color: #374151; border: 1px solid #d1d5db; padding: 10px 22px; border-radius: 8px; font-size: 14px; font-weight: 600; transition: all .15s; }
+    .btn-secondary:hover { border-color: #9ca3af; background: #f9fafb; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html" class="logo">
+      <img src="assets/logo.svg" alt="SchoolTrack" class="logo-img" />
+      <span class="logo-name">SchoolTrack</span>
+    </a>
+  </nav>
+  <div class="page">
+    <div class="inner">
+      <div class="code">404</div>
+      <h1>Page not found</h1>
+      <p>The page you're looking for doesn't exist or may have been moved. Let's get you back on track.</p>
+      <div class="btns">
+        <a href="index.html" class="btn-primary">Go home</a>
+        <a href="contact.html" class="btn-secondary">Contact support</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

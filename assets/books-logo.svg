@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 60" width="300" height="60">
+  <!-- Three books forming M shape - middle one shorter -->
+  <rect x="8" y="8" width="12" height="44" rx="2" fill="#2563EB"/>
+  <rect x="22" y="16" width="12" height="36" rx="2" fill="#3B82F6"/>
+  <rect x="36" y="8" width="12" height="44" rx="2" fill="#2563EB"/>
+  
+  <!-- Wordmark -->
+  <text x="60" y="41" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="28" font-weight="600" fill="#1E293B">
+    <tspan>Mark</tspan><tspan fill="#2563EB">Track</tspan>
+  </text>
+</svg>
