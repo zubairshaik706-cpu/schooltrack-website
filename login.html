@@ -125,6 +125,8 @@
     if (stored) {
       const user = JSON.parse(stored);
       if (user.email === email && user.password === password) {
+        localStorage.removeItem('st_staff_session');
+        localStorage.setItem('st_active_session', 'admin');
         btn.disabled = true; btn.textContent = 'Logging in…';
         setTimeout(() => window.location.href = 'app.html', 600);
         return;
@@ -137,6 +139,7 @@
     if (staffMember) {
       // Store staff session flag so app.js knows it's a staff login
       localStorage.setItem('st_staff_session', JSON.stringify(staffMember));
+      localStorage.setItem('st_active_session', 'staff');
       btn.disabled = true; btn.textContent = 'Logging in…';
       setTimeout(() => window.location.href = 'app.html', 600);
       return;

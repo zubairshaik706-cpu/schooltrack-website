@@ -15,7 +15,25 @@ const DB = {
 };
 
 // ===== AUTH =====
-function getUser() { return DB.get('user') || DB.get('staff_session'); }
+function getUser() {
+  const activeSession = localStorage.getItem('st_active_session');
+  const admin = DB.get('user');
+  const staff = DB.get('staff_session');
+  if (activeSession === 'staff' && staff) {
+    // fall through to staff branch below
+  } else if (admin) {
+    return admin;
+  }
+  if (!staff) return null;
+  const nameParts = (staff.name || '').trim().split(' ');
+  return {
+    ...staff,
+    firstName: nameParts[0] || 'Staff',
+    lastName: nameParts.slice(1).join(' ') || '',
+    schoolName: (DB.get('user') || {}).schoolName || 'My School',
+    isStaff: true
+  };
+}
 function requireAuth() {
   const user = getUser();
   if (!user) { window.location.href = 'login.html'; return null; }
@@ -24,6 +42,7 @@ function requireAuth() {
 function logout() {
   localStorage.removeItem('st_user');
   localStorage.removeItem('st_staff_session');
+  localStorage.removeItem('st_active_session');
   window.location.href = 'login.html';
 }
 
@@ -193,7 +212,7 @@ function dashboard() {
         ${classes.length === 0
           ? `<div class="empty-state"><p>No classes yet. <a href="#" onclick="event.preventDefault();navigate('classes')" style="color:var(--primary)">Add one →</a></p></div>`
           : classes.map(c => {
-              const cnt = DB.getList('students').filter(s => s.classId === c.id).length;
+              const cnt = DB.getList('students').filter(s => String(s.classId) === String(c.id)).length;
               return `
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
                   <div>
@@ -678,7 +697,7 @@ function classes() {
           </div>
         </div>` :
         classList.map(c => {
-          const cnt = students.filter(s => s.classId === c.id).length;
+          const cnt = students.filter(s => String(s.classId) === String(c.id)).length;
           return `
             <div class="card">
               <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">
@@ -837,7 +856,7 @@ function renderAttendanceDate(date) {
       </div>` :
       `<div class="att-grid" id="attGrid">
         ${classList.map(cls => {
-          const classStudents = students.filter(s => s.classId === cls.id && s.status === 'active');
+          const classStudents = students.filter(s => String(s.classId) === String(cls.id) && s.status === 'active');
           return `
             <div class="att-class-card">
               <div class="att-class-name">${cls.name} <span style="font-size:12px;color:var(--text3);font-weight:400;">— ${cls.teacher}</span></div>
@@ -1366,7 +1385,7 @@ function viewMessage(id) {
     <div style="background:var(--bg);border-radius:10px;padding:16px;font-size:14px;line-height:1.7;white-space:pre-wrap;color:var(--text2);">${m.body}</div>
     ${m.emails && m.emails.length ? `
     <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
-      <a href="mailto:${m.emails.join(',')}&subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}"
+      <a href="mailto:${m.emails.join(',')}?subject=${encodeURIComponent(m.subject)}&body=${encodeURIComponent(m.body)}"
         class="btn btn-primary" style="text-decoration:none;display:inline-block;">
         📧 Open in Email Client
       </a>
@@ -1722,7 +1741,7 @@ function renderSalahDate(date) {
       </div>
       <div class="att-grid">
         ${classList.map(cls => {
-          const classStudents = students.filter(s => s.classId === cls.id && s.status === 'active');
+          const classStudents = students.filter(s => String(s.classId) === String(cls.id) && s.status === 'active');
           return `
             <div class="att-class-card">
               <div class="att-class-name">${cls.name} <span style="font-size:12px;color:var(--text3);font-weight:400;">— ${cls.teacher}</span></div>
@@ -1763,7 +1782,7 @@ function toggleSalah(btn, studentId, prayer) {
 }
 
 function markAllSalah(classId) {
-  const classStudents = DB.getList('students').filter(s => s.classId === classId && s.status === 'active');
+  const classStudents = DB.getList('students').filter(s => String(s.classId) === String(classId) && s.status === 'active');
   const ids = new Set(classStudents.map(s => String(s.id)));
   document.querySelectorAll('.salah-row').forEach(row => {
     if (ids.has(row.dataset.studentId)) {
