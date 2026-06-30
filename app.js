@@ -184,8 +184,8 @@ function dashboard() {
 
   // Recent activity — newest students/staff first
   const activityItems = [
-    ...students.slice(-5).map(s => ({ text: `${s.firstName} ${s.lastName} joined`, time: s.id ? timeAgo(s.id) : '', sortId: s.id || 0 })),
-    ...staffList.slice(-3).map(s => ({ text: `${s.name} added as staff`, time: s.id ? timeAgo(s.id) : '', sortId: s.id || 0 }))
+    ...students.slice(-5).map(s => ({ name: `${s.firstName} ${s.lastName}`, action: 'joined', initials: initials(s.firstName, s.lastName), color: avatarColor(s.firstName + s.lastName), time: s.id ? timeAgo(s.id) : '', sortId: s.id || 0 })),
+    ...staffList.slice(-3).map(s => { const np = (s.name || '').trim().split(' '); return { name: s.name, action: 'added as staff', initials: initials(np[0] || '', np[1] || ''), color: avatarColor(s.name || 'Staff'), time: s.id ? timeAgo(s.id) : '', sortId: s.id || 0 }; })
   ].sort((a, b) => b.sortId - a.sortId).slice(0, 5);
 
   const recentAnnouncements = messages.filter(m => m.recipientType === 'announcement' || m.recipientType === 'parents').slice(-3).reverse();
@@ -283,9 +283,12 @@ function dashboard() {
 
       <div class="dash-side-grid">
         <div class="card">
-          <div class="card-header"><div class="card-title">📆 Today's Schedule</div><a href="#" onclick="event.preventDefault();navigate('calendar')" style="font-size:12px;color:var(--primary);font-weight:600;">View Full ›</a></div>
+          <div class="card-header"><div class="card-title"><svg class="card-title-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg> Today's Schedule</div><a href="#" onclick="event.preventDefault();navigate('calendar')" style="font-size:12px;color:var(--primary);font-weight:600;">View Full ›</a></div>
           ${classes.length === 0 ? `
-            <div class="schedule-empty"><div class="si">📦</div><div class="st">No classes today</div><div class="ss">Enjoy your free day!</div></div>
+            <div class="schedule-empty">
+              <svg class="si-cube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 2l9 5v10l-9 5-9-5V7l9-5z"/><path d="M3 7l9 5 9-5M12 12v10"/></svg>
+              <div class="st">No classes today</div><div class="ss">Enjoy your free day!</div>
+            </div>
           ` : classes.map(c => `
             <div class="schedule-item">
               <div class="schedule-dot"></div>
@@ -295,14 +298,17 @@ function dashboard() {
         </div>
 
         <div class="card">
-          <div class="card-header"><div class="card-title">🕐 Recent Activity</div></div>
+          <div class="card-header"><div class="card-title"><svg class="card-title-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg> Recent Activity</div></div>
           ${activityItems.length === 0 ? `
-            <div class="schedule-empty"><div class="si">🔔</div><div class="st">Nothing yet</div><div class="ss">Activity will show up here.</div></div>
+            <div class="schedule-empty">
+              <svg class="si-cube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+              <div class="st">Nothing yet</div><div class="ss">Activity will show up here.</div>
+            </div>
           ` : activityItems.map(r => `
             <div class="activity-item">
-              <span class="activity-dot" style="background:var(--primary);margin-top:7px;"></span>
+              <div class="student-avatar" style="width:28px;height:28px;font-size:10.5px;background:${r.color};flex-shrink:0;">${r.initials}</div>
               <div>
-                <div class="activity-text">${r.text}</div>
+                <div class="activity-text"><strong>${r.name}</strong> ${r.action}</div>
                 <div class="activity-time">${r.time}</div>
               </div>
             </div>
