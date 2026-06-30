@@ -519,6 +519,12 @@ tr:hover td { background: var(--bg); }
 .stats-row .stat-card { flex: 1; min-width: 140px; }
 .stat-val { font-size: 24px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; margin-bottom: 4px; }
 
-/* ===================== EXTRA BADGES / COLORS ===================== */
-.badge-blue { background: #dbeafe; color: #1e40af; }
-.badge-gray { background: var(--bg); color: var(--text3); border: 1px solid var(--border); }
+/* ===================== GENDER FILTER BUTTONS ===================== */
+.gender-filter-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.gender-btn {
+  padding: 5px 13px; border-radius: 99px; font-size: 12.5px; font-weight: 600;
+  background: #fff; border: 1px solid var(--border2); color: var(--text3);
+  cursor: pointer; transition: all .15s; font-family: inherit;
+}
+.gender-btn:hover { border-color: var(--primary); color: var(--primary); }
+.gender-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }

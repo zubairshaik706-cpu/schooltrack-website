@@ -229,7 +229,6 @@ function renderStudentList(filterStatus = 'active', search = '', filterGender = 
   document.getElementById('mainContent').innerHTML = `
     <div class="page-header">
       <div><h2>Students</h2><p>${DB.getList('students').length} total enrolled</p></div>
-      <button class="btn btn-primary" onclick="openAddStudentModal()">+ Add Student</button>
     </div>
 
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:0;">
@@ -513,7 +512,6 @@ function enrollment() {
         <h2>Enrollment</h2>
         <p>Manage student enrollment and applications</p>
       </div>
-      <button class="btn btn-primary" onclick="openEnrollmentForm()">+ Enroll Student</button>
     </div>
 
     <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px;">
@@ -664,7 +662,6 @@ function classes() {
   document.getElementById('mainContent').innerHTML = `
     <div class="page-header">
       <div><h2>Classes</h2><p>${classList.length} classes · ${students.length} students</p></div>
-      <button class="btn btn-primary" onclick="openAddClassModal()">+ Add Class</button>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
       ${classList.length === 0 ? `
@@ -936,7 +933,6 @@ function gradebook() {
   document.getElementById('mainContent').innerHTML = `
     <div class="page-header">
       <div><h2>Gradebook</h2><p>Track assignments and grades</p></div>
-      <button class="btn btn-primary" onclick="openAddGradeModal()">+ Add Assignment</button>
     </div>
 
     ${students.length === 0 ? `
@@ -1104,7 +1100,6 @@ function hifz() {
   document.getElementById('mainContent').innerHTML = `
     <div class="page-header">
       <div><h2>Hifz Tracking</h2><p>Track daily Quran memorization — sabaq, sabqi & manzil</p></div>
-      <button class="btn btn-primary" onclick="openHifzModal()">+ Log Session</button>
     </div>
 
     <div class="card">
@@ -1256,7 +1251,6 @@ function messages() {
   document.getElementById('mainContent').innerHTML = `
     <div class="page-header">
       <div><h2>Messages</h2><p>Log announcements and notes for your records</p></div>
-      <button class="btn btn-primary" onclick="openMessageModal()">+ New Message</button>
     </div>
 
     <div class="card">
@@ -1625,7 +1619,6 @@ function tuition() {
   document.getElementById('mainContent').innerHTML = `
     <div class="page-header">
       <div><h2>Tuition</h2><p>Payments and balances for all students</p></div>
-      <button class="btn btn-primary" onclick="openTuitionModal()">+ Add Entry</button>
     </div>
     <div class="stats-row" style="margin-bottom:20px;">
       <div class="stat-card"><div class="stat-val">$${totalCharged.toFixed(2)}</div><div class="stat-label">Total Charged</div></div>
@@ -1898,7 +1891,6 @@ function renderCalendar(year, month) {
   document.getElementById('mainContent').innerHTML = `
     <div class="page-header">
       <div><h2>Calendar</h2><p>School events, holidays and schedules</p></div>
-      <button class="btn btn-primary" onclick="openEventModal()">+ Add Event</button>
     </div>
     <div class="card" style="margin-bottom:16px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
@@ -1993,7 +1985,6 @@ function quizzes() {
   document.getElementById('mainContent').innerHTML = `
     <div class="page-header">
       <div><h2>Quiz Builder</h2><p>Create and print quizzes for your classes</p></div>
-      <button class="btn btn-primary" onclick="openNewQuizModal()">+ New Quiz</button>
     </div>
     ${list.length === 0 ? `
       <div class="empty-state"><div class="empty-state-icon">📝</div><h3>No quizzes yet</h3><p>Create your first quiz to get started.</p><button class="btn btn-primary" onclick="openNewQuizModal()">+ New Quiz</button></div>` : `
@@ -2153,7 +2144,6 @@ function staff() {
   document.getElementById('mainContent').innerHTML = `
     <div class="page-header">
       <div><h2>Staff & Permissions</h2><p>Manage teachers and staff access</p></div>
-      <button class="btn btn-primary" onclick="openAddStaffModal()">+ Add Staff</button>
     </div>
     <div style="background:var(--yellow-bg);border:1px solid #fde68a;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13.5px;color:#92400e;">
       <strong>How it works:</strong> Staff members use their email + password at the main login page. Teachers see only their assigned classes. Viewers have read-only access.
