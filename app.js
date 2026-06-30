@@ -108,7 +108,7 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
 const avatarColors = ['#4f46e5','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899'];
 function avatarColor(name) { let h = 0; for (const c of name) h += c.charCodeAt(0); return avatarColors[h % avatarColors.length]; }
 function initials(first, last) { return ((first[0] || '') + (last[0] || '')).toUpperCase(); }
-function formatDate(d) { if (!d) return '—'; const dt = new Date(d); return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
+function formatDate(d) { if (!d) return '—'; const dt = new Date(d.includes('T') ? d : d + 'T00:00:00'); return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
 function today() { return new Date().toISOString().split('T')[0]; }
 
 // =============================================

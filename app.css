@@ -512,19 +512,13 @@ tr:hover td { background: var(--bg); }
   display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;
 }
 
+/* ===================== STATS ROW (Tuition etc) ===================== */
+.stats-row {
+  display: flex; gap: 12px; flex-wrap: wrap;
+}
+.stats-row .stat-card { flex: 1; min-width: 140px; }
+.stat-val { font-size: 24px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; margin-bottom: 4px; }
+
 /* ===================== EXTRA BADGES / COLORS ===================== */
 .badge-blue { background: #dbeafe; color: #1e40af; }
 .badge-gray { background: var(--bg); color: var(--text3); border: 1px solid var(--border); }
-.badge-red  { background: #fee2e2; color: #991b1b; }
-
-.btn-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-.btn-danger:hover { background: #fca5a5; }
-
-/* CSS variables referenced in JS */
-:root {
-  --red: #ef4444;
-  --red-bg: #fee2e2;
-  --green: #059669;
-  --green-bg: #d1fae5;
-  --yellow-bg: #fffbeb;
-}
