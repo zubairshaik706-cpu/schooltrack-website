@@ -119,24 +119,35 @@
 
     const email = document.getElementById('email').value.trim().toLowerCase();
     const password = document.getElementById('password').value;
+
+    // 1. Check admin account
     const stored = localStorage.getItem('st_user');
+    if (stored) {
+      const user = JSON.parse(stored);
+      if (user.email === email && user.password === password) {
+        btn.disabled = true; btn.textContent = 'Logging in…';
+        setTimeout(() => window.location.href = 'app.html', 600);
+        return;
+      }
+    }
 
-    if (!stored) {
+    // 2. Check staff accounts
+    const staffList = JSON.parse(localStorage.getItem('st_staff') || '[]');
+    const staffMember = staffList.find(s => s.email === email && s.password === password);
+    if (staffMember) {
+      // Store staff session flag so app.js knows it's a staff login
+      localStorage.setItem('st_staff_session', JSON.stringify(staffMember));
+      btn.disabled = true; btn.textContent = 'Logging in…';
+      setTimeout(() => window.location.href = 'app.html', 600);
+      return;
+    }
+
+    if (!stored && staffList.length === 0) {
       err.textContent = 'No account found. Please sign up first.';
-      err.style.display = 'block';
-      return;
-    }
-
-    const user = JSON.parse(stored);
-    if (user.email !== email || user.password !== password) {
+    } else {
       err.textContent = 'Incorrect email or password.';
-      err.style.display = 'block';
-      return;
     }
-
-    btn.disabled = true;
-    btn.textContent = 'Logging in…';
-    setTimeout(() => window.location.href = 'app.html', 600);
+    err.style.display = 'block';
   });
 </script>
 </body>

@@ -72,14 +72,16 @@ function navigate(page) {
   const titles = {
     dashboard: 'Overview', students: 'Students', enrollment: 'Enrollment',
     classes: 'Classes', attendance: 'Attendance', gradebook: 'Gradebook',
-    hifz: 'Hifz Tracking', messages: 'Messages', settings: 'Settings'
+    hifz: 'Hifz Tracking', messages: 'Messages', settings: 'Settings',
+    salah: 'Salah Tracker', tuition: 'Tuition', calendar: 'Calendar',
+    quizzes: 'Quizzes', staff: 'Staff'
   };
   const pageLabel = titles[page] || page;
   document.getElementById('pageTitle').textContent = pageLabel;
   document.title = pageLabel + ' – SchoolTrack';
   document.getElementById('topbarActions').innerHTML = '';
 
-  const pages = { dashboard, students, enrollment, classes, attendance, gradebook, hifz, messages, settings };
+  const pages = { dashboard, students, enrollment, classes, attendance, gradebook, hifz, messages, settings, salah, tuition, calendar, quizzes, staff };
   if (pages[page]) pages[page]();
   else document.getElementById('mainContent').innerHTML = `<div class="empty-state"><div class="empty-state-icon">🚧</div><h3>Coming soon</h3><p>This page is under construction.</p></div>`;
 }
@@ -211,12 +213,14 @@ function students() {
   renderStudentList('active');
 }
 
-function renderStudentList(filterStatus = 'active', search = '') {
+function renderStudentList(filterStatus = 'active', search = '', filterGender = '') {
   _currentStudentFilter = filterStatus;
+  _currentStudentGender = filterGender;
   document.getElementById('topbarActions').innerHTML = `<button class="btn btn-primary" onclick="openAddStudentModal()">+ Add Student</button>`;
 
   let list = DB.getList('students');
   if (filterStatus !== 'all') list = list.filter(s => s.status === filterStatus);
+  if (filterGender) list = list.filter(s => s.gender === filterGender);
   if (search) list = list.filter(s => `${s.firstName} ${s.lastName}`.toLowerCase().includes(search.toLowerCase()));
 
   const classes = DB.getList('classes');
@@ -228,16 +232,24 @@ function renderStudentList(filterStatus = 'active', search = '') {
       <button class="btn btn-primary" onclick="openAddStudentModal()">+ Add Student</button>
     </div>
 
-    <div class="tabs">
-      <button class="tab-btn ${filterStatus==='active'?'active':''}" onclick="renderStudentList('active','')">Active</button>
-      <button class="tab-btn ${filterStatus==='inactive'?'active':''}" onclick="renderStudentList('inactive','')">Inactive</button>
-      <button class="tab-btn ${filterStatus==='all'?'active':''}" onclick="renderStudentList('all','')">All</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:0;">
+      <div class="tabs" style="margin-bottom:0;border-bottom:none;">
+        <button class="tab-btn ${filterStatus==='active'?'active':''}" onclick="renderStudentList('active','','${filterGender}')">Active</button>
+        <button class="tab-btn ${filterStatus==='inactive'?'active':''}" onclick="renderStudentList('inactive','','${filterGender}')">Inactive</button>
+        <button class="tab-btn ${filterStatus==='all'?'active':''}" onclick="renderStudentList('all','','${filterGender}')">All</button>
+      </div>
+      <div class="gender-filter-btns">
+        <button class="gender-btn ${!filterGender?'active':''}" onclick="renderStudentList('${filterStatus}','','')">All Genders</button>
+        <button class="gender-btn ${filterGender==='Male'?'active':''}" onclick="renderStudentList('${filterStatus}','','Male')">Male</button>
+        <button class="gender-btn ${filterGender==='Female'?'active':''}" onclick="renderStudentList('${filterStatus}','','Female')">Female</button>
+      </div>
     </div>
+    <div style="border-bottom:1px solid var(--border);margin-bottom:20px;"></div>
 
     <div class="search-bar">
       <div class="search-input-wrap">
         <svg viewBox="0 0 20 20" fill="currentColor" width="15" height="15"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>
-        <input class="form-input search-input" type="text" placeholder="Search students…" oninput="renderStudentList('${filterStatus}', this.value)" value="${search}" />
+        <input class="form-input search-input" type="text" placeholder="Search students…" oninput="renderStudentList('${filterStatus}', this.value, '${filterGender}')" value="${search}" />
       </div>
     </div>
 
@@ -477,6 +489,7 @@ function submitEditStudent(e, id) {
 }
 
 let _currentStudentFilter = 'active';
+let _currentStudentGender = '';
 function removeStudent(id, fromModal = false) {
   if (!confirm('Remove this student? This cannot be undone.')) return;
   DB.remove('students', id);
@@ -912,7 +925,10 @@ function gradebook() {
   const students = DB.getList('students');
   const grades = DB.getList('grades');
 
-  document.getElementById('topbarActions').innerHTML = `<button class="btn btn-primary" onclick="openAddGradeModal()">+ Add Assignment</button>`;
+  document.getElementById('topbarActions').innerHTML = `
+    <button class="btn btn-secondary" onclick="openReportCardModal()">📄 Report Cards</button>
+    <button class="btn btn-primary" onclick="openAddGradeModal()">+ Add Assignment</button>
+  `;
 
   const subjects = [...new Set(grades.map(g => g.subject))];
   const activeSubject = subjects[0] || 'Islamic Studies';
@@ -1380,6 +1396,29 @@ function settings() {
       </div>
 
       <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div class="card-title">Parent Portal</div>
+          <button class="btn btn-primary btn-sm" onclick="openAddParentModal()">+ Add Parent</button>
+        </div>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:12px;">Parents can log in at <strong>parent.html</strong> with their email and password to view their child's grades and attendance.</p>
+        ${(() => {
+          const parents = DB.getList('parents');
+          if (parents.length === 0) return '<p style="font-size:13px;color:var(--text3);">No parent accounts yet.</p>';
+          const students = DB.getList('students');
+          const sMap = Object.fromEntries(students.map(s=>[s.id, s.firstName+' '+s.lastName]));
+          return `<div class="table-wrap"><table>
+            <thead><tr><th>Name</th><th>Email</th><th>Children</th><th></th></tr></thead>
+            <tbody>${parents.map(p=>`<tr>
+              <td><strong>${p.name}</strong></td>
+              <td style="font-size:12px;color:var(--text3)">${p.email}</td>
+              <td style="font-size:12px;color:var(--text3)">${(p.studentIds||[]).map(id=>sMap[id]).filter(Boolean).join(', ')||'—'}</td>
+              <td><button class="btn btn-danger btn-sm" onclick="removeParent('${p.id}')">Remove</button></td>
+            </tr>`).join('')}</tbody>
+          </table></div>`;
+        })()}
+      </div>
+
+      <div class="card">
         <div class="card-title" style="margin-bottom:4px;">Account</div>
         <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">Logged in as <strong>${user.email}</strong></p>
         <button class="btn btn-danger" onclick="logout()">Log out</button>
@@ -1448,4 +1487,805 @@ function clearAllData() {
   ['students','classes','grades','attendance','hifz','messages'].forEach(k => localStorage.removeItem('st_' + k));
   toast('All data cleared.', '');
   navigate('dashboard');
+}
+
+// =============================================
+// PAGE: SALAH TRACKER
+// =============================================
+const pendingSalah = {};
+const PRAYERS = ['fajr','dhuhr','asr','maghrib','isha'];
+const PRAYER_LABELS = { fajr:'F', dhuhr:'D', asr:'A', maghrib:'M', isha:'I' };
+
+function salah() {
+  Object.keys(pendingSalah).forEach(k => delete pendingSalah[k]);
+  const salahDate = today();
+  document.getElementById('topbarActions').innerHTML = `
+    <input type="date" class="form-input" id="salahDate" value="${salahDate}"
+      onchange="renderSalahDate(this.value)" style="width:160px;padding:7px 10px;font-size:13px;" />
+  `;
+  renderSalahDate(salahDate);
+}
+
+function renderSalahDate(date) {
+  const classList = DB.getList('classes');
+  const students = DB.getList('students');
+  const records = DB.getList('salah').filter(r => r.date === date);
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="page-header">
+      <div><h2>Salah Tracker</h2><p>Track daily prayer attendance — ${formatDate(date)}</p></div>
+      <button class="btn btn-primary" onclick="saveSalahAttendance('${date}')">Save</button>
+    </div>
+    ${classList.length === 0 ? `
+      <div class="empty-state">
+        <div class="empty-state-icon">🕋</div>
+        <h3>No classes yet</h3>
+        <p>Add classes first to track Salah attendance.</p>
+      </div>` : `
+      <div style="margin-bottom:12px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px 16px;display:flex;gap:20px;font-size:12px;font-weight:600;color:var(--text3);">
+        <span>F = Fajr</span><span>D = Dhuhr</span><span>A = Asr</span><span>M = Maghrib</span><span>I = Isha</span>
+      </div>
+      <div class="att-grid">
+        ${classList.map(cls => {
+          const classStudents = students.filter(s => s.classId === cls.id && s.status === 'active');
+          return `
+            <div class="att-class-card">
+              <div class="att-class-name">${cls.name} <span style="font-size:12px;color:var(--text3);font-weight:400;">— ${cls.teacher}</span></div>
+              ${classStudents.length === 0 ? `<p style="font-size:13px;color:var(--text3);">No students in this class.</p>` :
+                classStudents.map(s => {
+                  const rec = records.find(r => r.studentId == s.id) || {};
+                  return `
+                    <div class="att-student-row salah-row" data-student-id="${s.id}">
+                      <div class="att-student-name" style="min-width:130px;">
+                        <div class="student-avatar" style="width:26px;height:26px;font-size:10px;background:${avatarColor(s.firstName+s.lastName)}">${initials(s.firstName,s.lastName)}</div>
+                        ${s.firstName} ${s.lastName}
+                      </div>
+                      <div style="display:flex;gap:5px;">
+                        ${PRAYERS.map(p => `
+                          <button class="salah-btn ${rec[p] ? 'salah-done' : ''}"
+                            title="${p.charAt(0).toUpperCase()+p.slice(1)}"
+                            onclick="toggleSalah(this,'${s.id}','${p}')">
+                            ${PRAYER_LABELS[p]}
+                          </button>
+                        `).join('')}
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              <div style="margin-top:10px;">
+                <button class="btn btn-secondary btn-sm" onclick="markAllSalah('${cls.id}')">All Present</button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>`
+    }
+  `;
+}
+
+function toggleSalah(btn, studentId, prayer) {
+  btn.classList.toggle('salah-done');
+}
+
+function markAllSalah(classId) {
+  const classStudents = DB.getList('students').filter(s => s.classId === classId && s.status === 'active');
+  const ids = new Set(classStudents.map(s => String(s.id)));
+  document.querySelectorAll('.salah-row').forEach(row => {
+    if (ids.has(row.dataset.studentId)) {
+      row.querySelectorAll('.salah-btn').forEach(b => b.classList.add('salah-done'));
+    }
+  });
+}
+
+function saveSalahAttendance(date) {
+  const existing = DB.getList('salah').filter(r => r.date !== date);
+  const uiRecords = [];
+  document.querySelectorAll('.salah-row').forEach(row => {
+    const sid = row.dataset.studentId;
+    if (!sid) return;
+    const rec = { id: Date.now() + Math.random(), studentId: sid, date };
+    PRAYERS.forEach(p => {
+      const btn = row.querySelector(`.salah-btn[title="${p.charAt(0).toUpperCase()+p.slice(1)}"]`);
+      rec[p] = btn ? btn.classList.contains('salah-done') : false;
+    });
+    uiRecords.push(rec);
+  });
+  DB.set('salah', [...existing, ...uiRecords]);
+  toast(`Salah saved for ${formatDate(date)} ✓`, 'success');
+}
+
+// =============================================
+// PAGE: TUITION
+// =============================================
+function tuition() {
+  const students = DB.getList('students').filter(s => s.status === 'active');
+  const payments = DB.getList('tuition');
+
+  document.getElementById('topbarActions').innerHTML = `<button class="btn btn-primary" onclick="openTuitionModal()">+ Add Entry</button>`;
+
+  if (students.length === 0) {
+    document.getElementById('mainContent').innerHTML = `
+      <div class="page-header"><div><h2>Tuition</h2><p>Track payments and balances</p></div></div>
+      <div class="empty-state"><div class="empty-state-icon">💳</div><h3>No students yet</h3><p>Add students to start tracking tuition.</p></div>`;
+    return;
+  }
+
+  const rows = students.map(s => {
+    const sp = payments.filter(p => p.studentId == s.id);
+    const charged = sp.filter(p => p.type === 'charge').reduce((a,p) => a + Number(p.amount), 0);
+    const paid = sp.filter(p => p.type === 'payment').reduce((a,p) => a + Number(p.amount), 0);
+    const balance = charged - paid;
+    return { s, charged, paid, balance };
+  });
+
+  const totalCharged = rows.reduce((a,r) => a + r.charged, 0);
+  const totalPaid = rows.reduce((a,r) => a + r.paid, 0);
+  const totalOwed = rows.reduce((a,r) => a + Math.max(0, r.balance), 0);
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="page-header">
+      <div><h2>Tuition</h2><p>Payments and balances for all students</p></div>
+      <button class="btn btn-primary" onclick="openTuitionModal()">+ Add Entry</button>
+    </div>
+    <div class="stats-row" style="margin-bottom:20px;">
+      <div class="stat-card"><div class="stat-val">$${totalCharged.toFixed(2)}</div><div class="stat-label">Total Charged</div></div>
+      <div class="stat-card"><div class="stat-val">$${totalPaid.toFixed(2)}</div><div class="stat-label">Total Collected</div></div>
+      <div class="stat-card"><div class="stat-val" style="color:var(--red)">$${totalOwed.toFixed(2)}</div><div class="stat-label">Outstanding</div></div>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Student</th><th>Charged</th><th>Paid</th><th>Balance</th><th></th></tr></thead>
+          <tbody>
+            ${rows.map(({s, charged, paid, balance}) => `
+              <tr>
+                <td><strong>${s.firstName} ${s.lastName}</strong></td>
+                <td>$${charged.toFixed(2)}</td>
+                <td style="color:var(--green)">$${paid.toFixed(2)}</td>
+                <td><span class="badge ${balance > 0 ? 'badge-red' : balance < 0 ? 'badge-blue' : 'badge-green'}">
+                  ${balance > 0 ? 'Owes $'+balance.toFixed(2) : balance < 0 ? 'Credit $'+Math.abs(balance).toFixed(2) : 'Paid up'}
+                </span></td>
+                <td><button class="btn btn-secondary btn-sm" onclick="viewStudentTuition('${s.id}')">History</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function viewStudentTuition(studentId) {
+  const s = DB.find('students', studentId);
+  const payments = DB.getList('tuition').filter(p => p.studentId == studentId);
+  const charged = payments.filter(p => p.type === 'charge').reduce((a,p) => a + Number(p.amount), 0);
+  const paid = payments.filter(p => p.type === 'payment').reduce((a,p) => a + Number(p.amount), 0);
+  const balance = charged - paid;
+
+  openModal(`${s.firstName} ${s.lastName} — Tuition`, `
+    <div style="display:flex;gap:12px;margin-bottom:16px;">
+      <div style="flex:1;background:var(--bg);border-radius:8px;padding:12px;text-align:center;">
+        <div style="font-size:18px;font-weight:700;">$${charged.toFixed(2)}</div>
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">Charged</div>
+      </div>
+      <div style="flex:1;background:var(--green-bg);border-radius:8px;padding:12px;text-align:center;">
+        <div style="font-size:18px;font-weight:700;color:var(--green)">$${paid.toFixed(2)}</div>
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">Paid</div>
+      </div>
+      <div style="flex:1;background:${balance>0?'var(--red-bg)':'var(--green-bg)'};border-radius:8px;padding:12px;text-align:center;">
+        <div style="font-size:18px;font-weight:700;color:${balance>0?'var(--red)':'var(--green)'}">$${Math.abs(balance).toFixed(2)}</div>
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">${balance>0?'Owed':balance<0?'Credit':'Clear'}</div>
+      </div>
+    </div>
+    ${payments.length === 0 ? '<p style="color:var(--text3);font-size:13px;margin-bottom:16px;">No entries yet.</p>' : `
+    <div class="table-wrap" style="margin-bottom:16px;">
+      <table>
+        <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Note</th><th></th></tr></thead>
+        <tbody>
+          ${payments.slice().reverse().map(p => `
+            <tr>
+              <td style="font-size:12px;">${formatDate(p.date)}</td>
+              <td><span class="badge ${p.type==='payment'?'badge-green':'badge-red'}" style="text-transform:capitalize;">${p.type}</span></td>
+              <td>$${Number(p.amount).toFixed(2)}</td>
+              <td style="color:var(--text3);font-size:12px;">${p.note||'—'}</td>
+              <td><button class="btn btn-danger btn-sm" onclick="removeTuitionEntry('${p.id}','${studentId}')">×</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`}
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+      <button class="btn btn-primary" onclick="openTuitionModal('${studentId}')">+ Add Entry</button>
+    </div>
+  `);
+}
+
+function openTuitionModal(preStudentId = '') {
+  const students = DB.getList('students').filter(s => s.status === 'active');
+  openModal('Add Tuition Entry', `
+    <form onsubmit="submitTuition(event)" class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Student <span class="required">*</span></label>
+        <select class="form-select" name="studentId" required>
+          <option value="">Select student…</option>
+          ${students.map(s => `<option value="${s.id}" ${String(s.id)===String(preStudentId)?'selected':''}>${s.firstName} ${s.lastName}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type <span class="required">*</span></label>
+        <select class="form-select" name="type" required>
+          <option value="charge">Charge (tuition fee)</option>
+          <option value="payment">Payment (received)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount ($) <span class="required">*</span></label>
+        <input class="form-input" name="amount" type="number" min="0.01" step="0.01" placeholder="150.00" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" name="date" type="date" value="${today()}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note</label>
+        <input class="form-input" name="note" placeholder="Monthly fee, scholarship, etc." />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Entry</button>
+      </div>
+    </form>
+  `);
+}
+
+function submitTuition(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  DB.push('tuition', { studentId: fd.get('studentId'), type: fd.get('type'), amount: fd.get('amount'), date: fd.get('date')||today(), note: fd.get('note') });
+  closeModal();
+  toast('Entry added!', 'success');
+  tuition();
+}
+
+function removeTuitionEntry(id, studentId) {
+  if (!confirm('Delete this entry?')) return;
+  DB.remove('tuition', id);
+  toast('Entry removed.', '');
+  viewStudentTuition(studentId);
+}
+
+// =============================================
+// FEATURE: REPORT CARDS (from Gradebook)
+// =============================================
+function openReportCardModal() {
+  const classes = DB.getList('classes');
+  if (classes.length === 0) { toast('Add classes first.', 'error'); return; }
+  openModal('Generate Report Cards', `
+    <form onsubmit="generateReportCard(event)" class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Class <span class="required">*</span></label>
+        <select class="form-select" name="classId" required onchange="loadStudentsForReport(this.value)">
+          <option value="">Select class…</option>
+          ${classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Student</label>
+        <select class="form-select" name="studentId" id="reportStudentSel">
+          <option value="all">All Students</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Generate →</button>
+      </div>
+    </form>
+  `);
+}
+
+function loadStudentsForReport(classId) {
+  const students = DB.getList('students').filter(s => s.classId === classId && s.status === 'active');
+  const sel = document.getElementById('reportStudentSel');
+  if (sel) sel.innerHTML = `<option value="all">All Students</option>` + students.map(s => `<option value="${s.id}">${s.firstName} ${s.lastName}</option>`).join('');
+}
+
+function generateReportCard(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const classId = fd.get('classId');
+  const studentId = fd.get('studentId');
+  const cls = DB.find('classes', classId);
+  const user = getUser();
+  let studentList = DB.getList('students').filter(s => s.classId === classId && s.status === 'active');
+  if (studentId !== 'all') studentList = studentList.filter(s => String(s.id) === String(studentId));
+  if (studentList.length === 0) { toast('No students found.', 'error'); return; }
+
+  const grades = DB.getList('grades');
+  const attendance = DB.getList('attendance');
+
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Report Cards</title>
+<style>
+  body{font-family:'Helvetica Neue',Arial,sans-serif;color:#111;background:#fff;padding:0;margin:0;}
+  .page{page-break-after:always;padding:40px;max-width:680px;margin:0 auto;}
+  .hdr{display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid #0d9488;padding-bottom:14px;margin-bottom:22px;}
+  .school{font-size:20px;font-weight:800;color:#0d9488;} .yr{font-size:12px;color:#6b7280;}
+  .rlbl{font-size:16px;font-weight:700;color:#374151;} .rdt{font-size:11px;color:#6b7280;}
+  .sinfo{background:#f0fdfa;border-radius:8px;padding:14px 18px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .si-lbl{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;} .si-val{font-size:13px;font-weight:600;}
+  .sec{font-size:13px;font-weight:700;color:#374151;margin:18px 0 8px;border-left:3px solid #0d9488;padding-left:10px;}
+  table{width:100%;border-collapse:collapse;margin-bottom:16px;}
+  th{background:#0d9488;color:#fff;padding:7px 12px;text-align:left;font-size:12px;}
+  td{padding:7px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;}
+  tr:nth-child(even) td{background:#f9fafb;}
+  .gA{color:#059669;font-weight:700;} .gB{color:#0d9488;font-weight:700;} .gC{color:#f59e0b;font-weight:700;} .gD,.gF{color:#ef4444;font-weight:700;}
+  .ftrs{margin-top:40px;display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .sig{border-top:1px solid #374151;padding-top:4px;font-size:11px;color:#6b7280;}
+  @media print{.no-print{display:none;}.page{padding:24px;}}
+  .print-btn{position:fixed;top:16px;right:16px;background:#0d9488;color:#fff;border:none;padding:9px 18px;border-radius:7px;cursor:pointer;font-size:14px;font-weight:600;}
+</style></head><body>
+<button class="print-btn no-print" onclick="window.print()">🖨️ Print</button>
+${studentList.map(s => {
+  const sg = grades.filter(g => g.studentId == s.id);
+  const subjects = [...new Set(sg.map(g => g.subject))];
+  const att = attendance.filter(a => a.studentId == s.id);
+  const present = att.filter(a => a.status==='present').length;
+  const total = att.length;
+  const rate = total > 0 ? Math.round(present/total*100) : 0;
+  const subRows = subjects.map(sub => {
+    const sg2 = sg.filter(g => g.subject===sub);
+    const avg = sg2.reduce((a,g) => a+(g.score/g.total*100),0)/sg2.length;
+    const letter = avg>=90?'A':avg>=80?'B':avg>=70?'C':avg>=60?'D':'F';
+    return `<tr><td>${sub}</td><td>${sg2.length}</td><td>${avg.toFixed(1)}%</td><td class="g${letter}">${letter}</td></tr>`;
+  }).join('');
+  return `<div class="page">
+    <div class="hdr">
+      <div><div class="school">${user.schoolName||'My School'}</div><div class="yr">Academic Report</div></div>
+      <div style="text-align:right"><div class="rlbl">Report Card</div><div class="rdt">Generated ${new Date().toLocaleDateString()}</div></div>
+    </div>
+    <div class="sinfo">
+      <div><div class="si-lbl">Student</div><div class="si-val">${s.firstName} ${s.lastName}</div></div>
+      <div><div class="si-lbl">Class</div><div class="si-val">${cls.name}</div></div>
+      <div><div class="si-lbl">Gender</div><div class="si-val">${s.gender||'—'}</div></div>
+      <div><div class="si-lbl">Attendance</div><div class="si-val">${present}/${total} days (${rate}%)</div></div>
+    </div>
+    <div class="sec">Academic Performance</div>
+    ${sg.length===0?'<p style="color:#6b7280;font-size:13px;">No grades recorded.</p>':`
+    <table><thead><tr><th>Subject</th><th>Assignments</th><th>Average</th><th>Grade</th></tr></thead><tbody>${subRows}</tbody></table>`}
+    <div class="sec">Attendance</div>
+    <table><thead><tr><th>Present</th><th>Absent</th><th>Late</th><th>Rate</th></tr></thead>
+    <tbody><tr><td>${att.filter(a=>a.status==='present').length}</td><td>${att.filter(a=>a.status==='absent').length}</td><td>${att.filter(a=>a.status==='late').length}</td><td>${rate}%</td></tr></tbody></table>
+    <div class="ftrs"><div><div class="sig">Class Teacher</div></div><div><div class="sig">Principal / Administrator</div></div></div>
+  </div>`;
+}).join('')}
+</body></html>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  closeModal();
+}
+
+// =============================================
+// PAGE: CALENDAR
+// =============================================
+function calendar() {
+  document.getElementById('topbarActions').innerHTML = `<button class="btn btn-primary" onclick="openEventModal()">+ Add Event</button>`;
+  const now = new Date();
+  renderCalendar(now.getFullYear(), now.getMonth());
+}
+
+function renderCalendar(year, month) {
+  const events = DB.getList('events');
+  const monthEvents = events.filter(e => { const d = new Date(e.date + 'T00:00:00'); return d.getFullYear()===year && d.getMonth()===month; });
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const monthName = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
+  const typeColors = { holiday:'#ef4444', exam:'#f59e0b', event:'#0d9488', other:'#6b7280' };
+
+  let cells = '';
+  for (let i = 0; i < firstDay; i++) cells += `<div class="cal-cell cal-empty"></div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayEvs = events.filter(e => e.date === ds);
+    const isToday = ds === today();
+    cells += `<div class="cal-cell ${isToday?'cal-today':''}" onclick="openEventModal('${ds}')">
+      <div class="cal-day-num ${isToday?'cal-today-num':''}">${d}</div>
+      <div class="cal-dots">${dayEvs.map(ev=>`<div class="cal-dot" style="background:${typeColors[ev.type]||'#6b7280'}" title="${ev.title}"></div>`).join('')}</div>
+    </div>`;
+  }
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="page-header">
+      <div><h2>Calendar</h2><p>School events, holidays and schedules</p></div>
+      <button class="btn btn-primary" onclick="openEventModal()">+ Add Event</button>
+    </div>
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <button class="btn btn-secondary btn-sm" onclick="renderCalendar(${month===0?year-1:year},${month===0?11:month-1})">‹ Prev</button>
+        <strong style="font-size:15px;">${monthName}</strong>
+        <button class="btn btn-secondary btn-sm" onclick="renderCalendar(${month===11?year+1:year},${month===11?0:month+1})">Next ›</button>
+      </div>
+      <div class="cal-grid">
+        ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>`<div class="cal-header">${d}</div>`).join('')}
+        ${cells}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px;">Events in ${monthName}</div>
+      ${monthEvents.length === 0 ? '<p style="color:var(--text3);font-size:14px;">No events this month.</p>' : `
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${monthEvents.sort((a,b)=>a.date.localeCompare(b.date)).map(ev=>`
+          <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg);border-radius:8px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:${typeColors[ev.type]||'#6b7280'};flex-shrink:0;"></div>
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:600;">${ev.title}</div>
+              <div style="font-size:12px;color:var(--text3);">${formatDate(ev.date)} · <span style="text-transform:capitalize;">${ev.type}</span>${ev.description?' · '+ev.description:''}</div>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="removeEvent('${ev.id}',${year},${month})">Delete</button>
+          </div>
+        `).join('')}
+      </div>`}
+    </div>
+  `;
+}
+
+function openEventModal(preDate='') {
+  openModal('Add Event', `
+    <form onsubmit="submitEvent(event)" class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Title <span class="required">*</span></label>
+        <input class="form-input" name="title" placeholder="Eid Holiday, Final Exams…" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date <span class="required">*</span></label>
+        <input class="form-input" name="date" type="date" value="${preDate||today()}" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="form-select" name="type">
+          <option value="event">Event</option>
+          <option value="holiday">Holiday</option>
+          <option value="exam">Exam</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <input class="form-input" name="description" placeholder="Optional details…" />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Event</button>
+      </div>
+    </form>
+  `);
+}
+
+function submitEvent(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const ev = DB.push('events', { title: fd.get('title'), date: fd.get('date'), type: fd.get('type'), description: fd.get('description') });
+  closeModal();
+  toast('Event added!', 'success');
+  const d = new Date(ev.date + 'T00:00:00');
+  renderCalendar(d.getFullYear(), d.getMonth());
+}
+
+function removeEvent(id, year, month) {
+  if (!confirm('Delete this event?')) return;
+  DB.remove('events', id);
+  toast('Event removed.', '');
+  renderCalendar(year, month);
+}
+
+// =============================================
+// PAGE: QUIZ BUILDER
+// =============================================
+const _quizQuestions = [];
+
+function quizzes() {
+  const list = DB.getList('quizzes');
+  const classes = DB.getList('classes');
+  const classMap = Object.fromEntries(classes.map(c => [c.id, c.name]));
+
+  document.getElementById('topbarActions').innerHTML = `<button class="btn btn-primary" onclick="openNewQuizModal()">+ New Quiz</button>`;
+  document.getElementById('mainContent').innerHTML = `
+    <div class="page-header">
+      <div><h2>Quiz Builder</h2><p>Create and print quizzes for your classes</p></div>
+      <button class="btn btn-primary" onclick="openNewQuizModal()">+ New Quiz</button>
+    </div>
+    ${list.length === 0 ? `
+      <div class="empty-state"><div class="empty-state-icon">📝</div><h3>No quizzes yet</h3><p>Create your first quiz to get started.</p><button class="btn btn-primary" onclick="openNewQuizModal()">+ New Quiz</button></div>` : `
+      <div class="card-grid">
+        ${list.map(q => `
+          <div class="card">
+            <div style="font-size:28px;margin-bottom:8px;">📝</div>
+            <div style="font-size:15px;font-weight:700;margin-bottom:4px;">${q.title}</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:14px;">${classMap[q.classId]||'No class'} · ${q.questions.length} question${q.questions.length!==1?'s':''}</div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-primary btn-sm" onclick="printQuiz('${q.id}')">🖨️ Print</button>
+              <button class="btn btn-danger btn-sm" onclick="removeQuiz('${q.id}')">Delete</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>`}
+  `;
+}
+
+function openNewQuizModal() {
+  _quizQuestions.length = 0;
+  const classes = DB.getList('classes');
+  openModal('New Quiz', `
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Quiz Title <span class="required">*</span></label>
+        <input class="form-input" id="quizTitle" placeholder="Week 3 Islamic Studies Quiz" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Class</label>
+        <select class="form-select" id="quizClassId">
+          <option value="">Select class…</option>
+          ${classes.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div style="margin:16px 0;border-top:1px solid var(--border);padding-top:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <strong style="font-size:14px;">Questions</strong>
+        <button class="btn btn-secondary btn-sm" type="button" onclick="addQuizQuestion()">+ Add Question</button>
+      </div>
+      <div id="quizQList"><p style="color:var(--text3);font-size:13px;">No questions yet.</p></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" type="button" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" type="button" onclick="saveQuiz()">Save Quiz</button>
+    </div>
+  `);
+}
+
+function addQuizQuestion() {
+  _quizQuestions.push({ id: Date.now(), q:'', type:'mc', options:['','','',''], answer:'' });
+  renderQuizQuestions();
+}
+
+function renderQuizQuestions() {
+  const c = document.getElementById('quizQList');
+  if (!c) return;
+  if (_quizQuestions.length === 0) { c.innerHTML = '<p style="color:var(--text3);font-size:13px;">No questions yet.</p>'; return; }
+  c.innerHTML = _quizQuestions.map((q,i) => `
+    <div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:10px;border:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <strong style="font-size:13px;">Q${i+1}</strong>
+        <button class="btn btn-danger btn-sm" type="button" onclick="removeQuizQ(${q.id})">×</button>
+      </div>
+      <input class="form-input" placeholder="Question text…" value="${q.q||''}"
+        oninput="updateQuizQ(${q.id},'q',this.value)" style="margin-bottom:8px;" />
+      <select class="form-select" onchange="updateQuizQ(${q.id},'type',this.value)" style="margin-bottom:8px;">
+        <option value="mc" ${q.type==='mc'?'selected':''}>Multiple Choice</option>
+        <option value="tf" ${q.type==='tf'?'selected':''}>True / False</option>
+        <option value="sa" ${q.type==='sa'?'selected':''}>Short Answer</option>
+      </select>
+      ${q.type==='mc'?q.options.map((o,oi)=>`
+        <div style="display:flex;gap:6px;margin-bottom:5px;align-items:center;">
+          <input type="radio" name="ans_${q.id}" value="${oi}" ${q.answer==oi?'checked':''} onchange="updateQuizQ(${q.id},'answer',this.value)" />
+          <input class="form-input" placeholder="Option ${oi+1}" value="${o}" oninput="updateQuizOpt(${q.id},${oi},this.value)" style="flex:1;" />
+        </div>`).join('')+`<p style="font-size:11px;color:var(--text3);margin-top:2px;">Select radio = correct answer</p>`:
+      q.type==='tf'?`<div style="display:flex;gap:16px;">
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;"><input type="radio" name="ans_${q.id}" value="True" ${q.answer==='True'?'checked':''} onchange="updateQuizQ(${q.id},'answer',this.value)" /> True</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;"><input type="radio" name="ans_${q.id}" value="False" ${q.answer==='False'?'checked':''} onchange="updateQuizQ(${q.id},'answer',this.value)" /> False</label>
+      </div>`:
+      `<p style="font-size:12px;color:var(--text3);">Students write their answer in the space provided.</p>`}
+    </div>
+  `).join('');
+}
+
+function updateQuizQ(id, field, val) {
+  const q = _quizQuestions.find(q=>q.id==id);
+  if (q) { q[field]=val; if(field==='type') renderQuizQuestions(); }
+}
+function updateQuizOpt(qId, oi, val) {
+  const q = _quizQuestions.find(q=>q.id==qId);
+  if (q) q.options[oi]=val;
+}
+function removeQuizQ(id) {
+  const idx = _quizQuestions.findIndex(q=>q.id==id);
+  if (idx>=0) _quizQuestions.splice(idx,1);
+  renderQuizQuestions();
+}
+function saveQuiz() {
+  const title = document.getElementById('quizTitle')?.value.trim();
+  const classId = document.getElementById('quizClassId')?.value;
+  if (!title) { toast('Enter a quiz title.','error'); return; }
+  if (_quizQuestions.length === 0) { toast('Add at least one question.','error'); return; }
+  DB.push('quizzes', { title, classId, createdAt: today(), questions: JSON.parse(JSON.stringify(_quizQuestions)) });
+  closeModal();
+  toast('Quiz saved!','success');
+  quizzes();
+}
+function removeQuiz(id) {
+  if (!confirm('Delete this quiz?')) return;
+  DB.remove('quizzes', id);
+  toast('Quiz deleted.','');
+  quizzes();
+}
+function printQuiz(id) {
+  const q = DB.find('quizzes', id);
+  const cls = q.classId ? DB.find('classes', q.classId) : null;
+  const user = getUser();
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${q.title}</title>
+<style>body{font-family:Arial,sans-serif;padding:40px;color:#111;max-width:680px;margin:0 auto;}
+.hdr{border-bottom:2px solid #0d9488;padding-bottom:12px;margin-bottom:22px;}
+.school{font-size:12px;color:#6b7280;}.title{font-size:22px;font-weight:800;color:#0d9488;}
+.meta{font-size:12px;color:#6b7280;margin-top:4px;}
+.sinfo{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:18px 0;}
+.field{border-bottom:1px solid #374151;min-height:24px;padding:4px 0;}.fl{font-size:11px;color:#6b7280;}
+.q{margin-bottom:22px;}.qt{font-size:14px;font-weight:600;margin-bottom:8px;}
+.opt{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:13px;}
+.circle{width:16px;height:16px;border:1.5px solid #374151;border-radius:50%;flex-shrink:0;}
+.saline{border-bottom:1px solid #d1d5db;margin:6px 0;height:26px;}
+@media print{.no-print{display:none;}}
+.pbtn{position:fixed;top:16px;right:16px;background:#0d9488;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;}</style></head><body>
+<button class="pbtn no-print" onclick="window.print()">🖨️ Print</button>
+<div class="hdr"><div class="school">${user.schoolName||'My School'}</div>
+<div class="title">${q.title}</div>
+<div class="meta">${cls?cls.name:''} &nbsp;·&nbsp; ${q.questions.length} Questions &nbsp;·&nbsp; Date: ___________</div></div>
+<div class="sinfo"><div><div class="fl">Student Name</div><div class="field"></div></div><div><div class="fl">Score</div><div class="field"></div></div></div>
+${q.questions.map((qn,i)=>`<div class="q"><div class="qt">${i+1}. ${qn.q||'[Question]'}</div>
+${qn.type==='mc'?qn.options.filter(o=>o).map(o=>`<div class="opt"><div class="circle"></div>${o}</div>`).join(''):
+qn.type==='tf'?`<div class="opt"><div class="circle"></div>True</div><div class="opt"><div class="circle"></div>False</div>`:
+`<div class="saline"></div><div class="saline"></div><div class="saline"></div>`}
+</div>`).join('')}
+</body></html>`);
+  w.document.close();
+}
+
+// =============================================
+// PAGE: STAFF & PERMISSIONS
+// =============================================
+function staff() {
+  const staffList = DB.getList('staff');
+  const classes = DB.getList('classes');
+  const classMap = Object.fromEntries(classes.map(c=>[c.id, c.name]));
+
+  document.getElementById('topbarActions').innerHTML = `<button class="btn btn-primary" onclick="openAddStaffModal()">+ Add Staff</button>`;
+  document.getElementById('mainContent').innerHTML = `
+    <div class="page-header">
+      <div><h2>Staff & Permissions</h2><p>Manage teachers and staff access</p></div>
+      <button class="btn btn-primary" onclick="openAddStaffModal()">+ Add Staff</button>
+    </div>
+    <div style="background:var(--yellow-bg);border:1px solid #fde68a;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13.5px;color:#92400e;">
+      <strong>How it works:</strong> Staff members use their email + password at the main login page. Teachers see only their assigned classes. Viewers have read-only access.
+    </div>
+    ${staffList.length === 0 ? `
+      <div class="empty-state"><div class="empty-state-icon">👤</div><h3>No staff yet</h3><p>Add teachers and staff to give them their own login.</p><button class="btn btn-primary" onclick="openAddStaffModal()">+ Add Staff</button></div>` : `
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Classes</th><th></th></tr></thead>
+            <tbody>
+              ${staffList.map(s=>`
+                <tr>
+                  <td><strong>${s.name}</strong></td>
+                  <td style="color:var(--text3)">${s.email}</td>
+                  <td><span class="badge ${s.role==='admin'?'badge-green':s.role==='teacher'?'badge-blue':'badge-gray'}" style="text-transform:capitalize;">${s.role}</span></td>
+                  <td style="font-size:12px;color:var(--text3);">${s.role==='teacher'?(s.classIds||[]).map(id=>classMap[id]).filter(Boolean).join(', ')||'All':'All'}</td>
+                  <td><button class="btn btn-danger btn-sm" onclick="removeStaff('${s.id}')">Remove</button></td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`}
+  `;
+}
+
+function openAddStaffModal() {
+  const classes = DB.getList('classes');
+  openModal('Add Staff Member', `
+    <form onsubmit="submitStaff(event)" class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Full Name <span class="required">*</span></label>
+        <input class="form-input" name="name" placeholder="Ustadh Ahmad Malik" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email <span class="required">*</span></label>
+        <input class="form-input" name="email" type="email" placeholder="ahmad@school.edu" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password <span class="required">*</span></label>
+        <input class="form-input" name="password" type="password" placeholder="Min 6 characters" minlength="6" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role <span class="required">*</span></label>
+        <select class="form-select" name="role" required onchange="document.getElementById('classGrp').style.display=this.value==='teacher'?'':'none'">
+          <option value="teacher">Teacher — sees assigned classes only</option>
+          <option value="viewer">Viewer — read-only, sees everything</option>
+          <option value="admin">Admin — full access</option>
+        </select>
+      </div>
+      <div class="form-group" id="classGrp">
+        <label class="form-label">Assigned Classes</label>
+        <div style="display:flex;flex-direction:column;gap:6px;max-height:150px;overflow-y:auto;padding:4px 0;">
+          ${classes.length===0?'<p style="font-size:13px;color:var(--text3);">No classes added yet.</p>':
+            classes.map(c=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;"><input type="checkbox" name="classIds" value="${c.id}" />${c.name}</label>`).join('')}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Staff Member</button>
+      </div>
+    </form>
+  `);
+}
+
+function submitStaff(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const email = fd.get('email').trim().toLowerCase();
+  if (DB.getList('staff').find(s=>s.email===email)) { toast('Email already in use.','error'); return; }
+  if (getUser().email === email) { toast('That email belongs to the admin account.','error'); return; }
+  DB.push('staff', { name: fd.get('name'), email, password: fd.get('password'), role: fd.get('role'), classIds: fd.getAll('classIds') });
+  closeModal();
+  toast('Staff member added!','success');
+  staff();
+}
+
+function removeStaff(id) {
+  if (!confirm('Remove this staff member?')) return;
+  DB.remove('staff', id);
+  toast('Removed.','');
+  staff();
+}
+
+// =============================================
+// PAGE: PARENT PORTAL (settings section)
+// =============================================
+function openAddParentModal() {
+  const students = DB.getList('students').filter(s=>s.status==='active');
+  openModal('Add Parent', `
+    <form onsubmit="submitParent(event)" class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Parent Name <span class="required">*</span></label>
+        <input class="form-input" name="name" placeholder="Fatima Hassan" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email <span class="required">*</span></label>
+        <input class="form-input" name="email" type="email" placeholder="fatima@example.com" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password <span class="required">*</span></label>
+        <input class="form-input" name="password" type="password" placeholder="Min 6 characters" minlength="6" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Their Children</label>
+        <div style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;padding:4px 0;">
+          ${students.length===0?'<p style="font-size:13px;color:var(--text3);">No active students yet.</p>':
+            students.map(s=>`<label style="display:flex;align-items:center;gap:8px;font-size:13px;"><input type="checkbox" name="studentIds" value="${s.id}" />${s.firstName} ${s.lastName}</label>`).join('')}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Parent</button>
+      </div>
+    </form>
+  `);
+}
+
+function submitParent(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const email = fd.get('email').trim().toLowerCase();
+  if (DB.getList('parents').find(p=>p.email===email)) { toast('Email already in use.','error'); return; }
+  DB.push('parents', { name: fd.get('name'), email, password: fd.get('password'), studentIds: fd.getAll('studentIds') });
+  closeModal();
+  toast('Parent added!','success');
+  settings();
+}
+
+function removeParent(id) {
+  if (!confirm('Remove this parent account?')) return;
+  DB.remove('parents', id);
+  toast('Parent removed.','');
+  settings();
 }

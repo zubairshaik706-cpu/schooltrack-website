@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parent Portal – SchoolTrack</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f8fafc; min-height: 100vh; color: #0f172a; -webkit-font-smoothing: antialiased; }
+    a { text-decoration: none; }
+
+    /* NAV */
+    .nav { height: 60px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; }
+    .logo { display: flex; align-items: center; gap: 9px; }
+    .logo img { width: 26px; height: 26px; }
+    .logo-name { font-size: 16px; font-weight: 800; letter-spacing: -.4px; }
+    .badge { display: inline-flex; align-items: center; gap: 5px; background: #f0fdfa; border: 1px solid #ccfbf1; color: #0f766e; border-radius: 99px; padding: 3px 10px; font-size: 11px; font-weight: 700; }
+
+    /* LOGIN */
+    .center { min-height: calc(100vh - 60px); display: flex; align-items: center; justify-content: center; padding: 32px 16px; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 36px; width: 100%; max-width: 400px; box-shadow: 0 4px 24px rgba(0,0,0,.06); }
+    .card-title { font-size: 20px; font-weight: 800; letter-spacing: -.4px; margin-bottom: 4px; }
+    .card-sub { font-size: 13.5px; color: #64748b; margin-bottom: 22px; }
+    .form-group { margin-bottom: 13px; }
+    .form-label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 5px; }
+    .form-input { width: 100%; padding: 10px 13px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; font-family: inherit; color: #0f172a; outline: none; transition: border-color .15s, box-shadow .15s; }
+    .form-input:focus { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,.12); }
+    .form-input::placeholder { color: #94a3b8; }
+    .btn { width: 100%; padding: 11px; background: #0d9488; color: #fff; font-size: 14.5px; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; font-family: inherit; transition: background .15s; margin-top: 4px; }
+    .btn:hover { background: #0f766e; }
+    .btn:disabled { background: #99d6d1; cursor: not-allowed; }
+    .error { background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #991b1b; margin-bottom: 12px; display: none; }
+
+    /* PORTAL */
+    .portal { display: none; max-width: 800px; margin: 0 auto; padding: 28px 20px; }
+    .portal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .portal-title { font-size: 20px; font-weight: 800; }
+    .portal-sub { font-size: 13px; color: #64748b; margin-top: 2px; }
+    .logout-btn { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .logout-btn:hover { background: #e2e8f0; }
+
+    .child-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; margin-bottom: 20px; overflow: hidden; }
+    .child-header { background: linear-gradient(135deg, #0d9488, #065f46); color: #fff; padding: 18px 22px; }
+    .child-name { font-size: 18px; font-weight: 800; }
+    .child-meta { font-size: 13px; opacity: .8; margin-top: 3px; }
+    .child-body { padding: 20px 22px; }
+
+    .section { margin-bottom: 22px; }
+    .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #64748b; margin-bottom: 10px; }
+
+    .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 16px; }
+    .stat { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; text-align: center; }
+    .stat-val { font-size: 22px; font-weight: 800; color: #0d9488; }
+    .stat-lbl { font-size: 11px; color: #64748b; margin-top: 2px; text-transform: uppercase; letter-spacing: .4px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 8px 10px; background: #f8fafc; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: #64748b; border-bottom: 1px solid #e2e8f0; }
+    td { padding: 9px 10px; border-bottom: 1px solid #f1f5f9; }
+    tr:last-child td { border-bottom: none; }
+
+    .grade-A { color: #059669; font-weight: 700; }
+    .grade-B { color: #0d9488; font-weight: 700; }
+    .grade-C { color: #f59e0b; font-weight: 700; }
+    .grade-D, .grade-F { color: #ef4444; font-weight: 700; }
+
+    .pill { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+    .pill-green { background: #d1fae5; color: #065f46; }
+    .pill-red { background: #fee2e2; color: #991b1b; }
+    .pill-yellow { background: #fef9c3; color: #92400e; }
+    .pill-done { background: #f0fdfa; color: #0f766e; }
+
+    .empty { color: #94a3b8; font-size: 13px; padding: 8px 0; }
+  </style>
+</head>
+<body>
+<nav class="nav">
+  <div class="logo">
+    <img src="assets/logo.svg" alt="SchoolTrack" />
+    <span class="logo-name">SchoolTrack</span>
+  </div>
+  <span class="badge">Parent Portal</span>
+</nav>
+
+<!-- LOGIN -->
+<div class="center" id="loginView">
+  <div class="card">
+    <div class="card-title">Parent Login</div>
+    <p class="card-sub">View your child's grades, attendance, and progress.</p>
+    <div class="error" id="loginErr"></div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="pemail" type="email" required placeholder="your@email.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" id="ppwd" type="password" required placeholder="Your password" />
+      </div>
+      <button class="btn" type="submit" id="loginBtn">Log in →</button>
+    </form>
+  </div>
+</div>
+
+<!-- PORTAL -->
+<div class="portal" id="portalView">
+  <div class="portal-header">
+    <div>
+      <div class="portal-title" id="portalName">Welcome</div>
+      <div class="portal-sub">Read-only view of your children's school records</div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Log out</button>
+  </div>
+  <div id="childrenContent"></div>
+</div>
+
+<script>
+const DB = {
+  getList: k => JSON.parse(localStorage.getItem('st_' + k) || '[]'),
+  find: (k, id) => DB.getList(k).find(i => String(i.id) === String(id))
+};
+
+function formatDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const email = document.getElementById('pemail').value.trim().toLowerCase();
+  const pwd = document.getElementById('ppwd').value;
+  const err = document.getElementById('loginErr');
+  err.style.display = 'none';
+
+  const parents = DB.getList('parents');
+  const parent = parents.find(p => p.email === email && p.password === pwd);
+  if (!parent) {
+    err.textContent = 'Incorrect email or password, or no parent account found.';
+    err.style.display = 'block';
+    return;
+  }
+
+  sessionStorage.setItem('st_parent_session', JSON.stringify(parent));
+  showPortal(parent);
+});
+
+function showPortal(parent) {
+  document.getElementById('loginView').style.display = 'none';
+  const pv = document.getElementById('portalView');
+  pv.style.display = 'block';
+  document.getElementById('portalName').textContent = 'Welcome, ' + parent.name;
+
+  const studentIds = parent.studentIds || [];
+  const content = document.getElementById('childrenContent');
+
+  if (studentIds.length === 0) {
+    content.innerHTML = '<p style="color:#94a3b8;">No students linked to your account yet. Contact the school office.</p>';
+    return;
+  }
+
+  content.innerHTML = studentIds.map(sid => renderChild(sid)).join('');
+}
+
+function renderChild(sid) {
+  const s = DB.find('students', sid);
+  if (!s) return '';
+  const cls = s.classId ? DB.find('classes', s.classId) : null;
+  const grades = DB.getList('grades').filter(g => String(g.studentId) === String(sid));
+  const att = DB.getList('attendance').filter(a => String(a.studentId) === String(sid));
+  const salah = DB.getList('salah').filter(r => String(r.studentId) === String(sid));
+  const hifz = DB.getList('hifz').filter(h => String(h.studentId) === String(sid));
+  const tuition = DB.getList('tuition').filter(t => String(t.studentId) === String(sid));
+
+  const present = att.filter(a => a.status === 'present').length;
+  const absent = att.filter(a => a.status === 'absent').length;
+  const late = att.filter(a => a.status === 'late').length;
+  const attRate = att.length > 0 ? Math.round(present / att.length * 100) : null;
+
+  const charged = tuition.filter(t => t.type === 'charge').reduce((a, t) => a + Number(t.amount), 0);
+  const paid = tuition.filter(t => t.type === 'payment').reduce((a, t) => a + Number(t.amount), 0);
+  const balance = charged - paid;
+
+  // Grades by subject
+  const subjects = [...new Set(grades.map(g => g.subject))];
+  const subjectRows = subjects.map(sub => {
+    const sg = grades.filter(g => g.subject === sub);
+    const avg = sg.reduce((a, g) => a + (g.score / g.total * 100), 0) / sg.length;
+    const letter = avg >= 90 ? 'A' : avg >= 80 ? 'B' : avg >= 70 ? 'C' : avg >= 60 ? 'D' : 'F';
+    return `<tr><td>${sub}</td><td>${sg.length}</td><td>${avg.toFixed(1)}%</td><td class="grade-${letter}">${letter}</td></tr>`;
+  }).join('');
+
+  // Recent salah (last 7 days)
+  const prayers = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+  const recentSalah = salah.slice(-7).reverse();
+
+  // Hifz progress
+  const latestHifz = hifz.length > 0 ? hifz.sort((a,b) => a.date > b.date ? -1 : 1)[0] : null;
+
+  return `
+    <div class="child-card">
+      <div class="child-header">
+        <div class="child-name">${s.firstName} ${s.lastName}</div>
+        <div class="child-meta">${cls ? cls.name : 'No class assigned'} · ${s.gender || ''}</div>
+      </div>
+      <div class="child-body">
+
+        <div class="stat-row">
+          <div class="stat"><div class="stat-val">${attRate !== null ? attRate + '%' : '—'}</div><div class="stat-lbl">Attendance</div></div>
+          <div class="stat"><div class="stat-val">${present}</div><div class="stat-lbl">Present</div></div>
+          <div class="stat"><div class="stat-val">${absent}</div><div class="stat-lbl">Absent</div></div>
+          <div class="stat"><div class="stat-val" style="color:${balance > 0 ? '#ef4444' : '#059669'}">$${Math.abs(balance).toFixed(0)}</div><div class="stat-lbl">${balance > 0 ? 'Owed' : balance < 0 ? 'Credit' : 'Paid up'}</div></div>
+        </div>
+
+        ${subjects.length > 0 ? `
+        <div class="section">
+          <div class="section-title">Grades by Subject</div>
+          <table><thead><tr><th>Subject</th><th>Assignments</th><th>Average</th><th>Grade</th></tr></thead>
+          <tbody>${subjectRows}</tbody></table>
+        </div>` : ''}
+
+        ${grades.length > 0 ? `
+        <div class="section">
+          <div class="section-title">Recent Assignments</div>
+          <table><thead><tr><th>Date</th><th>Subject</th><th>Title</th><th>Score</th></tr></thead>
+          <tbody>
+            ${grades.slice().sort((a,b)=>b.date>a.date?1:-1).slice(0,8).map(g => {
+              const pct = Math.round(g.score / g.total * 100);
+              const letter = pct>=90?'A':pct>=80?'B':pct>=70?'C':pct>=60?'D':'F';
+              return `<tr>
+                <td style="color:#64748b;font-size:12px;">${formatDate(g.date)}</td>
+                <td>${g.subject}</td>
+                <td>${g.title||'—'}</td>
+                <td class="grade-${letter}">${g.score}/${g.total} (${pct}%)</td>
+              </tr>`;
+            }).join('')}
+          </tbody></table>
+        </div>` : ''}
+
+        ${att.length > 0 ? `
+        <div class="section">
+          <div class="section-title">Recent Attendance</div>
+          <table><thead><tr><th>Date</th><th>Status</th></tr></thead>
+          <tbody>
+            ${att.slice().sort((a,b)=>b.date>a.date?1:-1).slice(0,10).map(a => `
+              <tr>
+                <td style="color:#64748b;font-size:12px;">${formatDate(a.date)}</td>
+                <td><span class="pill ${a.status==='present'?'pill-green':a.status==='absent'?'pill-red':'pill-yellow'}">${a.status}</span></td>
+              </tr>`).join('')}
+          </tbody></table>
+        </div>` : ''}
+
+        ${recentSalah.length > 0 ? `
+        <div class="section">
+          <div class="section-title">Salah Attendance (Recent)</div>
+          <table><thead><tr><th>Date</th><th>Fajr</th><th>Dhuhr</th><th>Asr</th><th>Maghrib</th><th>Isha</th></tr></thead>
+          <tbody>
+            ${recentSalah.map(r => `<tr>
+              <td style="color:#64748b;font-size:12px;">${formatDate(r.date)}</td>
+              ${prayers.map(p => `<td>${r[p] ? '✅' : '❌'}</td>`).join('')}
+            </tr>`).join('')}
+          </tbody></table>
+        </div>` : ''}
+
+        ${latestHifz ? `
+        <div class="section">
+          <div class="section-title">Hifz Progress</div>
+          <table><thead><tr><th>Surah</th><th>Juz</th><th>Status</th><th>Updated</th></tr></thead>
+          <tbody>
+            ${hifz.slice().sort((a,b)=>b.date>a.date?1:-1).slice(0,5).map(h => `<tr>
+              <td>${h.surahName||h.surah||'—'}</td>
+              <td>${h.juz||'—'}</td>
+              <td><span class="pill pill-done" style="text-transform:capitalize;">${h.status||'—'}</span></td>
+              <td style="color:#64748b;font-size:12px;">${formatDate(h.date)}</td>
+            </tr>`).join('')}
+          </tbody></table>
+        </div>` : ''}
+
+      </div>
+    </div>
+  `;
+}
+
+function doLogout() {
+  sessionStorage.removeItem('st_parent_session');
+  document.getElementById('portalView').style.display = 'none';
+  document.getElementById('loginView').style.display = 'flex';
+  document.getElementById('pemail').value = '';
+  document.getElementById('ppwd').value = '';
+}
+
+// Auto-login if session exists
+const sess = sessionStorage.getItem('st_parent_session');
+if (sess) {
+  const parent = JSON.parse(sess);
+  // Re-validate against current data
+  const parents = DB.getList('parents');
+  const valid = parents.find(p => p.id === parent.id);
+  if (valid) showPortal(valid);
+}
+</script>
+</body>
+</html>
