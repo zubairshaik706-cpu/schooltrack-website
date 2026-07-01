@@ -253,8 +253,8 @@ function dashboard() {
       <div class="stat-card"><div class="stat-value">0</div><div class="stat-sub">Pending Invites</div></div>
     </div>
 
-    <div class="dash-grid">
-      <div>
+    <div class="dash-grid-3col">
+      <div class="dash-main-col">
         <div class="card" style="margin-bottom:16px;">
           <div class="card-header"><div class="card-title">⚡ Quick Actions</div></div>
           <div class="quick-actions-grid">
@@ -301,24 +301,66 @@ function dashboard() {
           </div>
         </div>
 
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header">
+            <div class="card-title">🏫 Schools</div>
+            <button class="btn btn-primary btn-sm" onclick="toast('School management coming soon.','')">+ Add School</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>SCHOOL</th><th>CLASSES</th><th>STUDENTS</th><th>TEACHERS</th><th>ACTIONS</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <strong>${user.schoolName || 'My School'}</strong>
+                    <span class="badge badge-green" style="font-size:10px;">● SELECTED</span>
+                  </div>
+                  <div style="font-size:12px;color:var(--text4);">${user.email || ''}</div>
+                </td>
+                <td>${classes.length}</td>
+                <td>${students.length}</td>
+                <td>${staffList.length}</td>
+                <td><button class="btn btn-secondary btn-sm" onclick="navigate('settings')">✎ Edit</button></td>
+              </tr>
+            </tbody>
+          </table></div>
+          <div style="padding:8px 0 4px;font-size:12px;color:var(--text4);">1 school total &nbsp;<a href="#" style="color:var(--primary);font-weight:600;" onclick="event.preventDefault()">View all schools →</a></div>
+        </div>
+
         <div class="card">
-          <div class="card-header"><div class="card-title">📣 Recent Announcements</div><button class="btn btn-secondary btn-sm" onclick="navigate('messages')">New +</button></div>
-          ${recentAnnouncements.length === 0 ? `
-            <div class="schedule-empty"><div class="si">📣</div><div class="st">No announcements yet</div><div class="ss">Messages sent to parents will appear here.</div></div>
-          ` : recentAnnouncements.map(m => `
-            <div class="activity-item">
-              <span style="font-size:16px;flex-shrink:0;">📨</span>
-              <div>
-                <div class="activity-text"><strong>${m.subject}</strong> — ${m.to}</div>
-                <div class="activity-time">${formatDate(m.date)}</div>
-              </div>
+          <div class="card-header">
+            <div class="card-title">📅 Attendance Overview</div>
+            <a href="#" onclick="event.preventDefault();navigate('attendance')" style="font-size:12px;color:var(--primary);font-weight:600;">View All →</a>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:4px 0 8px;">
+            <div class="att-overview-box">
+              <div class="att-overview-label">TODAY</div>
+              ${(() => {
+                const todayRec = DB.getList('attendance').filter(r => r.date === today());
+                if (todayRec.length === 0) return `<div class="att-overview-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><div>No attendance recorded today</div></div>`;
+                const present = todayRec.filter(r => r.status === 'present').length;
+                const absent = todayRec.filter(r => r.status === 'absent').length;
+                return `<div style="display:flex;gap:16px;padding:8px 0;"><div><div style="font-size:22px;font-weight:700;color:#10b981;">${present}</div><div style="font-size:12px;color:var(--text4);">Present</div></div><div><div style="font-size:22px;font-weight:700;color:#ef4444;">${absent}</div><div style="font-size:12px;color:var(--text4);">Absent</div></div></div>`;
+              })()}
             </div>
-          `).join('')}
+            <div class="att-overview-box">
+              <div class="att-overview-label">THIS WEEK</div>
+              ${(() => {
+                const mon = mondayOf(new Date());
+                const weekDates = Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(d.getDate()+i);return isoDate(d);});
+                const weekRec = DB.getList('attendance').filter(r => weekDates.includes(r.date));
+                if (weekRec.length === 0) return `<div class="att-overview-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><div>No attendance data this week</div></div>`;
+                const present = weekRec.filter(r => r.status === 'present').length;
+                const absent = weekRec.filter(r => r.status === 'absent').length;
+                return `<div style="display:flex;gap:16px;padding:8px 0;"><div><div style="font-size:22px;font-weight:700;color:#10b981;">${present}</div><div style="font-size:12px;color:var(--text4);">Present</div></div><div><div style="font-size:22px;font-weight:700;color:#ef4444;">${absent}</div><div style="font-size:12px;color:var(--text4);">Absent</div></div></div>`;
+              })()}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="dash-side-grid">
-        <div class="card">
+      <div class="dash-side-col">
+        <div class="card" style="margin-bottom:16px;">
           <div class="card-header"><div class="card-title"><svg class="card-title-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg> Today's Schedule</div><a href="#" onclick="event.preventDefault();navigate('calendar')" style="font-size:12px;color:var(--primary);font-weight:600;">View Full ›</a></div>
           ${classes.length === 0 ? `
             <div class="schedule-empty">
@@ -333,12 +375,12 @@ function dashboard() {
           `).join('')}
         </div>
 
-        <div class="card">
+        <div class="card" style="margin-bottom:16px;">
           <div class="card-header"><div class="card-title"><svg class="card-title-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg> Recent Activity</div></div>
           ${activityItems.length === 0 ? `
             <div class="schedule-empty">
               <svg class="si-cube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-              <div class="st">Nothing yet</div><div class="ss">Activity will show up here.</div>
+              <div class="st">No recent activity</div>
             </div>
           ` : activityItems.map(r => `
             <div class="activity-item">
@@ -350,62 +392,24 @@ function dashboard() {
             </div>
           `).join('')}
         </div>
-      </div>
-    </div>
 
-    <div class="card" style="margin-top:16px;">
-      <div class="card-header">
-        <div class="card-title">🏫 Schools</div>
-        <button class="btn btn-primary btn-sm" onclick="toast('School management coming soon.','')">+ Add School</button>
-      </div>
-      <div class="table-wrap"><table>
-        <thead><tr><th>SCHOOL</th><th>CLASSES</th><th>STUDENTS</th><th>TEACHERS</th><th>ACTIONS</th></tr></thead>
-        <tbody>
-          <tr>
-            <td>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <strong>${user.schoolName || 'My School'}</strong>
-                <span class="badge badge-green" style="font-size:10px;">● SELECTED</span>
+        <div class="card">
+          <div class="card-header"><div class="card-title">📣 Recent Announcements</div><a href="#" onclick="event.preventDefault();navigate('messages')" style="font-size:12px;color:var(--primary);font-weight:600;">New +</a></div>
+          ${recentAnnouncements.length === 0 ? `
+            <div class="schedule-empty">
+              <svg class="si-cube" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+              <div class="st">No announcements yet</div>
+              <a href="#" onclick="event.preventDefault();navigate('messages')" style="font-size:12.5px;color:var(--primary);font-weight:600;margin-top:4px;display:inline-block;">+ Create first announcement</a>
+            </div>
+          ` : recentAnnouncements.map(m => `
+            <div class="activity-item">
+              <span style="font-size:16px;flex-shrink:0;">📨</span>
+              <div>
+                <div class="activity-text"><strong>${m.subject}</strong> — ${m.to}</div>
+                <div class="activity-time">${formatDate(m.date)}</div>
               </div>
-              <div style="font-size:12px;color:var(--text4);">${user.email || ''}</div>
-            </td>
-            <td>${classes.length}</td>
-            <td>${students.length}</td>
-            <td>${staffList.length}</td>
-            <td><button class="btn btn-secondary btn-sm" onclick="navigate('settings')">✎ Edit</button></td>
-          </tr>
-        </tbody>
-      </table></div>
-      <div style="padding:8px 0 4px;font-size:12px;color:var(--text4);">1 school total &nbsp;<a href="#" style="color:var(--primary);font-weight:600;" onclick="event.preventDefault()">View all schools →</a></div>
-    </div>
-
-    <div class="card" style="margin-top:16px;">
-      <div class="card-header">
-        <div class="card-title">📅 Attendance Overview</div>
-        <a href="#" onclick="event.preventDefault();navigate('attendance')" style="font-size:12px;color:var(--primary);font-weight:600;">View All →</a>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:4px 0 8px;">
-        <div class="att-overview-box">
-          <div class="att-overview-label">TODAY</div>
-          ${(() => {
-            const todayRec = DB.getList('attendance').filter(r => r.date === today());
-            if (todayRec.length === 0) return `<div class="att-overview-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><div>No attendance recorded today</div></div>`;
-            const present = todayRec.filter(r => r.status === 'present').length;
-            const absent = todayRec.filter(r => r.status === 'absent').length;
-            return `<div style="display:flex;gap:16px;padding:8px 0;"><div><div style="font-size:22px;font-weight:700;color:#10b981;">${present}</div><div style="font-size:12px;color:var(--text4);">Present</div></div><div><div style="font-size:22px;font-weight:700;color:#ef4444;">${absent}</div><div style="font-size:12px;color:var(--text4);">Absent</div></div></div>`;
-          })()}
-        </div>
-        <div class="att-overview-box">
-          <div class="att-overview-label">THIS WEEK</div>
-          ${(() => {
-            const mon = mondayOf(new Date());
-            const weekDates = Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(d.getDate()+i);return isoDate(d);});
-            const weekRec = DB.getList('attendance').filter(r => weekDates.includes(r.date));
-            if (weekRec.length === 0) return `<div class="att-overview-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><div>No attendance data this week</div></div>`;
-            const present = weekRec.filter(r => r.status === 'present').length;
-            const absent = weekRec.filter(r => r.status === 'absent').length;
-            return `<div style="display:flex;gap:16px;padding:8px 0;"><div><div style="font-size:22px;font-weight:700;color:#10b981;">${present}</div><div style="font-size:12px;color:var(--text4);">Present</div></div><div><div style="font-size:22px;font-weight:700;color:#ef4444;">${absent}</div><div style="font-size:12px;color:var(--text4);">Absent</div></div></div>`;
-          })()}
+            </div>
+          `).join('')}
         </div>
       </div>
     </div>
@@ -706,76 +710,89 @@ function removeStudent(id, fromModal = false) {
 // =============================================
 // PAGE: ENROLLMENT
 // =============================================
+let _enrollmentTab = 'all';
+
 function enrollment() {
-  document.getElementById('topbarActions').innerHTML = `<button class="btn btn-primary" onclick="openEnrollmentForm()">+ New Enrollment</button>`;
-  const students = DB.getList('students');
-  const classes = DB.getList('classes');
-  const classMap = Object.fromEntries(classes.map(c => [c.id, c.name]));
+  document.getElementById('topbarActions').innerHTML = `
+    <button class="btn btn-secondary btn-sm" onclick="toast('Export CSV coming soon.','')">📄 Export CSV</button>
+    <button class="btn btn-secondary btn-sm" onclick="toast('Export PDF coming soon.','')">📄 Export PDF</button>
+    <button class="btn btn-secondary btn-sm" onclick="toast('Manage Forms coming soon.','')">📋 Manage Forms</button>
+    <button class="btn btn-primary" onclick="toast('New Form coming soon.','')">+ New Form</button>
+  `;
+  renderEnrollmentApplications();
+}
+
+function renderEnrollmentApplications() {
+  const apps = DB.getList('enrollment_apps');
+  const tabs = ['all','pending','under-review','accepted','rejected','waitlisted'];
+  const tabLabels = { all:'All', pending:'Pending', 'under-review':'Under Review', accepted:'Accepted', rejected:'Rejected', waitlisted:'Waitlisted' };
+
+  const filtered = _enrollmentTab === 'all' ? apps : apps.filter(a => a.status === _enrollmentTab);
+  const counts = {};
+  tabs.forEach(t => counts[t] = t === 'all' ? apps.length : apps.filter(a => a.status === t).length);
 
   document.getElementById('mainContent').innerHTML = `
     <div class="page-header">
       <div>
-        <h2>Enrollment</h2>
-        <p>Manage student enrollment and applications</p>
+        <div class="breadcrumb">Dashboard</div>
+        <h2>Enrollment Applications</h2>
+        <p>Manage student enrollment applications</p>
       </div>
     </div>
 
-    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px;">
-      <div class="stat-card">
-        <div class="stat-icon">✅</div>
-        <div class="stat-label">Enrolled</div>
-        <div class="stat-value">${students.filter(s=>s.status==='active').length}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:0;">
+      <div class="tabs" style="margin-bottom:0;border-bottom:none;flex-wrap:wrap;">
+        ${tabs.map(t => `
+          <button class="tab-btn ${_enrollmentTab===t?'active':''}" onclick="_enrollmentTab='${t}';renderEnrollmentApplications();">
+            ${tabLabels[t]} <span style="background:${_enrollmentTab===t?'#2563eb':'var(--border)'};color:${_enrollmentTab===t?'white':'var(--text3)'};border-radius:10px;padding:1px 7px;font-size:11px;margin-left:3px;">${counts[t]}</span>
+          </button>
+        `).join('')}
       </div>
-      <div class="stat-card">
-        <div class="stat-icon">🏫</div>
-        <div class="stat-label">Classes</div>
-        <div class="stat-value">${classes.length}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">📊</div>
-        <div class="stat-label">Capacity Used</div>
-        <div class="stat-value">${students.length > 0 ? Math.round(students.length / Math.max(classes.length * 20, 1) * 100) : 0}%</div>
-      </div>
+    </div>
+    <div style="border-bottom:1px solid var(--border);margin-bottom:12px;"></div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <input class="form-input" type="text" placeholder="Search by name, email, or application #..." style="flex:1;min-width:200px;" />
+      <button class="btn btn-secondary btn-sm">All Forms</button>
+      <button class="btn btn-secondary btn-sm">
+        <svg viewBox="0 0 20 20" fill="currentColor" width="13" height="13" style="margin-right:4px;"><path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L13 10.414V15a1 1 0 01-.553.894l-4 2A1 1 0 017 17v-6.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd"/></svg>
+        Filter
+      </button>
     </div>
 
     <div class="card">
-      <div class="card-header">
-        <div class="card-title">All Enrollments</div>
-        <button class="btn btn-secondary btn-sm" onclick="openEnrollmentForm()">+ Enroll</button>
-      </div>
       <div class="table-wrap">
-        ${students.length === 0 ? `
-          <div class="empty-state">
-            <div class="empty-state-icon">🎓</div>
-            <h3>No students enrolled</h3>
-            <p>Start by enrolling your first student.</p>
-            <button class="btn btn-primary" onclick="openEnrollmentForm()">+ Enroll Student</button>
-          </div>` : `
-          <table>
-            <thead><tr><th>Student</th><th>Class</th><th>Parent Email</th><th>Date of Birth</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody>
-              ${students.map(s => `
-                <tr>
-                  <td>
-                    <div style="display:flex;align-items:center;gap:10px;">
-                      <div class="student-avatar" style="background:${avatarColor(s.firstName+s.lastName)}">${initials(s.firstName,s.lastName)}</div>
-                      <strong>${s.firstName} ${s.lastName}</strong>
-                    </div>
-                  </td>
-                  <td>${classMap[s.classId] || '—'}</td>
-                  <td style="color:var(--text3);">${s.email || '—'}</td>
-                  <td>${formatDate(s.dob)}</td>
-                  <td><span class="badge ${s.status==='active'?'badge-green':'badge-gray'}">${s.status}</span></td>
-                  <td>
-                    <select class="form-select" style="width:120px;padding:5px 8px;font-size:12px;" onchange="changeStudentStatus('${s.id}',this.value)">
-                      <option value="active" ${s.status==='active'?'selected':''}>Active</option>
-                      <option value="inactive" ${s.status==='inactive'?'selected':''}>Inactive</option>
-                    </select>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>`}
+        <table>
+          <thead><tr>
+            <th><input type="checkbox" style="accent-color:#2563eb;" /></th>
+            <th>APPLICANT</th><th>FORM</th><th>APPLICATION #</th><th>SUBMITTED</th><th>STATUS</th><th>PAYMENT</th><th>ACTIONS</th>
+          </tr></thead>
+          <tbody>
+            ${filtered.length === 0 ? `
+              <tr><td colspan="8">
+                <div class="empty-state" style="padding:48px 20px;">
+                  <div style="width:56px;height:56px;border-radius:12px;background:var(--bg2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--text4)" stroke-width="1.4" width="28" height="28"><path d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0H4m4-3h8"/></svg>
+                  </div>
+                  <h3 style="font-size:15px;font-weight:600;margin-bottom:4px;">No applications found</h3>
+                  <p style="color:var(--text3);font-size:13px;margin-bottom:16px;">Applications will appear here when submitted</p>
+                  <button class="btn btn-primary" onclick="toast('Create Enrollment Form coming soon.','')">+ Create Enrollment Form</button>
+                </div>
+              </td></tr>
+            ` : filtered.map(a => `
+              <tr>
+                <td><input type="checkbox" style="accent-color:#2563eb;" /></td>
+                <td><strong>${a.name}</strong><div style="font-size:12px;color:var(--text3);">${a.email || ''}</div></td>
+                <td>${a.form || '—'}</td>
+                <td style="color:var(--text3);">#${a.appNum || '—'}</td>
+                <td>${formatDate(a.submitted)}</td>
+                <td><span class="badge ${a.status==='accepted'?'badge-green':a.status==='rejected'?'badge-red':a.status==='pending'?'badge-yellow':'badge-blue'}">${a.status}</span></td>
+                <td>${a.payment || '—'}</td>
+                <td><button class="btn btn-secondary btn-sm">View</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
       </div>
     </div>
   `;
@@ -1314,105 +1331,63 @@ function closeAttActionsMenu() {
 function gradebook() {
   const classList = DB.getList('classes');
   const students = DB.getList('students');
-  const grades = DB.getList('grades');
 
   document.getElementById('topbarActions').innerHTML = `
     <button class="btn btn-secondary" onclick="openReportCardModal()">📄 Report Cards</button>
     <button class="btn btn-primary" onclick="openAddGradeModal()">+ Add Assignment</button>
   `;
 
-  const subjects = [...new Set(grades.map(g => g.subject))];
-  const activeSubject = subjects[0] || 'Islamic Studies';
+  // Group classes by grade
+  const gradeGroups = {};
+  classList.forEach(c => {
+    const gradeKey = c.grade || c.name || 'General';
+    if (!gradeGroups[gradeKey]) gradeGroups[gradeKey] = [];
+    gradeGroups[gradeKey].push(c);
+  });
+
+  const todayStr = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   document.getElementById('mainContent').innerHTML = `
     <div class="page-header">
-      <div><h2>Gradebook</h2><p>Track assignments and grades</p></div>
-    </div>
-
-    ${students.length === 0 ? `
-      <div class="empty-state"><div class="empty-state-icon">📊</div><h3>No students yet</h3><p>Enroll students first to start grading.</p><button class="btn btn-primary" onclick="navigate('enrollment')">Enroll Students</button></div>` :
-    `
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-header">
-        <div class="card-title">Grade Summary</div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Student</th>
-              <th>Class</th>
-              ${subjects.map(s => `<th>${s}</th>`).join('')}
-              <th>Average</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${students.map(s => {
-              const cls = classList.find(c => c.id === s.classId);
-              const subjectAvgs = subjects.map(sub => {
-                const subGrades = grades.filter(g => g.studentId == s.id && g.subject === sub);
-                if (!subGrades.length) return '<td style="color:var(--text4)">—</td>';
-                const avg = Math.round(subGrades.reduce((a,g)=>a+(g.score/g.total*100),0)/subGrades.length);
-                const color = avg>=90?'var(--green)':avg>=70?'var(--text2)':'var(--red)';
-                return `<td style="font-weight:600;color:${color}">${avg}%</td>`;
-              });
-              const allGrades = grades.filter(g => g.studentId == s.id);
-              const overall = allGrades.length ? Math.round(allGrades.reduce((a,g)=>a+(g.score/g.total*100),0)/allGrades.length) : null;
-              return `
-                <tr>
-                  <td>
-                    <div style="display:flex;align-items:center;gap:8px;">
-                      <div class="student-avatar" style="background:${avatarColor(s.firstName+s.lastName)}">${initials(s.firstName,s.lastName)}</div>
-                      <strong>${s.firstName} ${s.lastName}</strong>
-                    </div>
-                  </td>
-                  <td style="color:var(--text3);font-size:13px;">${cls?.name || '—'}</td>
-                  ${subjectAvgs.join('')}
-                  <td>${overall !== null ? `<span class="badge ${overall>=90?'badge-green':overall>=70?'badge-blue':'badge-red'}">${overall}%</span>` : '—'}</td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
+      <div>
+        <div class="breadcrumb"><a href="#" onclick="event.preventDefault();navigate('dashboard')">Dashboard</a> › Gradebooks</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+          <button class="back-arrow-btn" onclick="navigate('dashboard')">←</button>
+          <h2 style="margin:0;">All Gradebooks</h2>
+        </div>
+        <p>View and manage gradebooks</p>
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">All Assignments</div>
-        <button class="btn btn-secondary btn-sm" onclick="openAddGradeModal()">+ Add</button>
+    ${classList.length === 0 ? `
+      <div class="empty-state"><div class="empty-state-icon">📊</div><h3>No gradebooks yet</h3><p>Create classes first to see gradebooks.</p><button class="btn btn-primary" onclick="navigate('classes')">Create Class</button></div>
+    ` : Object.entries(gradeGroups).map(([gradeName, gradeClasses]) => `
+      <div class="card" style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" width="20" height="20"><path d="M4 6h16M4 10h16M4 14h10"/><circle cx="17" cy="17" r="3"/><path d="M19.5 19.5L21 21"/></svg>
+            <span style="font-weight:700;font-size:15px;">${gradeName}</span>
+          </div>
+          <span class="badge badge-blue">${gradeClasses.length} subject${gradeClasses.length !== 1 ? 's' : ''}</span>
+        </div>
+        ${gradeClasses.map(c => {
+          const enrolledCount = students.filter(s => s.classId == c.id).length;
+          return `
+            <div style="display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid var(--border);last-child:border-bottom:none;">
+              <input type="checkbox" style="width:15px;height:15px;accent-color:#2563eb;flex-shrink:0;" />
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.6" width="18" height="18" style="flex-shrink:0;"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              <span style="font-weight:600;font-size:14px;flex:1;">${c.subject || c.name}</span>
+              <span style="display:flex;align-items:center;gap:4px;color:var(--text3);font-size:13px;">
+                <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>
+                ${enrolledCount} students
+              </span>
+              <span style="color:var(--text4);font-size:12.5px;">${todayStr}</span>
+              <button class="btn btn-primary btn-sm" onclick="toast('Gradebook for ${c.subject || c.name} coming soon.','')">View →</button>
+            </div>
+          `;
+        }).join('')}
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Student</th><th>Subject</th><th>Assignment</th><th>Score</th><th>Date</th><th></th></tr></thead>
-          <tbody>
-            ${grades.length === 0
-              ? `<tr><td colspan="6"><div class="empty-state" style="padding:30px"><p>No grades yet. Add an assignment to get started.</p></div></td></tr>`
-              : grades.slice().reverse().map(g => {
-                  const s = students.find(st => st.id == g.studentId);
-                  if (!s) return '';
-                  const pct = Math.round(g.score / g.total * 100);
-                  return `
-                    <tr>
-                      <td>
-                        <div style="display:flex;align-items:center;gap:8px;">
-                          <div class="student-avatar" style="background:${avatarColor(s.firstName+s.lastName)}">${initials(s.firstName,s.lastName)}</div>
-                          ${s.firstName} ${s.lastName}
-                        </div>
-                      </td>
-                      <td>${g.subject}</td>
-                      <td>${g.assignment}</td>
-                      <td><span class="badge ${pct>=90?'badge-green':pct>=70?'badge-blue':'badge-red'}">${g.score}/${g.total}</span></td>
-                      <td style="color:var(--text3);">${formatDate(g.date)}</td>
-                      <td><button class="btn btn-danger btn-sm" onclick="removeGrade('${g.id}')">Delete</button></td>
-                    </tr>
-                  `;
-                }).join('')
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>`}
+    `).join('')}
   `;
 }
 
@@ -3243,8 +3218,8 @@ let _reportTab = 'all';
 
 function reportBuilder() {
   document.getElementById('topbarActions').innerHTML = `
-    <button class="btn btn-secondary" onclick="toast('Saved reports coming soon.','')">Saved</button>
-    <button class="btn btn-secondary" onclick="toast('Report cards coming soon.','')">Report Cards</button>
+    <button class="btn btn-secondary" onclick="toast('Report cards coming soon.','')">📄 Report Cards</button>
+    <button class="btn btn-secondary" onclick="toast('Saved reports coming soon.','')">📌 Saved</button>
   `;
   renderReportBuilder();
 }
@@ -3276,6 +3251,15 @@ function renderReportBuilder() {
 
   const filtered = _reportTab === 'all' ? reports : reports.filter(r => r.cat === _reportTab);
   const catColors = { attendance:'#f59e0b', grades:'#3b82f6', directory:'#8b5cf6', hifz:'#10b981', behavior:'#ef4444', billing:'#06b6d4', profile:'#6b7280' };
+  const catIcons = {
+    attendance: `<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/></svg>`,
+    grades: `<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg>`,
+    directory: `<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/></svg>`,
+    hifz: `<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"/></svg>`,
+    behavior: `<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>`,
+    billing: `<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/></svg>`,
+    profile: `<svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>`
+  };
 
   document.getElementById('mainContent').innerHTML = `
     <div class="page-header">
@@ -3308,12 +3292,12 @@ function renderReportBuilder() {
             ${filtered.map(r => `
               <tr>
                 <td>
-                  <div style="display:flex;align-items:flex-start;gap:10px;">
-                    <div style="width:28px;height:28px;border-radius:6px;background:${catColors[r.cat]}22;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
-                      <div style="width:8px;height:8px;border-radius:50%;background:${catColors[r.cat]};"></div>
+                  <div style="display:flex;align-items:flex-start;gap:12px;">
+                    <div style="width:36px;height:36px;border-radius:9px;background:${catColors[r.cat]}22;color:${catColors[r.cat]};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
+                      ${catIcons[r.cat] || ''}
                     </div>
                     <div>
-                      <div style="font-weight:600;font-size:13.5px;">${r.name}${r.starred?` <span style="font-size:10px;background:#fef9c3;color:#854d0e;border-radius:4px;padding:1px 5px;margin-left:4px;">⭐</span>`:''}</div>
+                      <div style="font-weight:600;font-size:13.5px;">${r.name}${r.starred?` <span style="font-size:10px;background:#fef9c3;color:#854d0e;border-radius:4px;padding:1px 5px;margin-left:4px;">★</span>`:''}</div>
                       <div style="font-size:12px;color:var(--text3);margin-top:2px;">${r.desc}</div>
                     </div>
                   </div>

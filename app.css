@@ -853,6 +853,32 @@ table.att-week-table { width: 100%; border-collapse: collapse; }
   border-top: 1px solid var(--border);
 }
 
+/* ===== DASHBOARD 3-COL LAYOUT ===== */
+.dash-grid-3col {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  align-items: start;
+}
+.dash-main-col { min-width: 0; }
+.dash-side-col { min-width: 0; }
+@media (max-width: 900px) {
+  .dash-grid-3col { grid-template-columns: 1fr; }
+}
+
+/* ===== BACK ARROW BTN ===== */
+.back-arrow-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--text2);
+  line-height: 1.4;
+}
+.back-arrow-btn:hover { background: var(--bg2); }
+
 /* ===== PARENTS EMPTY STATE ===== */
 .parents-empty-card {
   border: 2px dashed var(--border2);
