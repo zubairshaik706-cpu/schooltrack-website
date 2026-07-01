@@ -88,19 +88,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Logout
   document.getElementById('logoutBtn').addEventListener('click', logout);
 
-  // Academic year label + progress (Aug 1 – Jun 30 school year)
+  // Academic year label
   (function initAcademicYear() {
     const now = new Date();
-    const y = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1; // school year starts August
-    const start = new Date(y, 7, 1);
-    const end = new Date(y + 1, 6, 31);
+    const y = now.getMonth() >= 7 ? now.getFullYear() : now.getFullYear() - 1;
     document.getElementById('academicYearLabel').textContent = `${y}-${y + 1}`;
-    const totalDays = (end - start) / 86400000;
-    const elapsed = Math.min(Math.max((now - start) / 86400000, 0), totalDays);
-    const pct = Math.round((elapsed / totalDays) * 100);
-    const weeksLeft = Math.max(Math.ceil((end - now) / (7 * 86400000)), 0);
-    document.getElementById('yearProgressFill').style.width = pct + '%';
-    document.getElementById('yearProgressLabel').textContent = now > end || now < start ? 'Out of session' : `${weeksLeft} weeks left`;
   })();
 
   // Global search — Enter jumps to Students page filtered by query
@@ -274,15 +266,15 @@ function dashboard() {
               <div class="quick-action-icon" style="background:var(--yellow-bg);color:#92400e;">✈️</div>
               <div class="quick-action-label">Send Email</div>
             </button>
-            <button class="quick-action-btn" onclick="toast('SMS messaging is coming soon.', '')">
+            <button class="quick-action-btn" onclick="navigate('settings');setTimeout(()=>renderSettings('sms'),80)">
               <div class="quick-action-icon" style="background:var(--green-bg);color:#065f46;">💬</div>
               <div class="quick-action-label">Send SMS</div>
             </button>
-            <button class="quick-action-btn" onclick="toast('AI Student Import is coming soon.', '')">
+            <button class="quick-action-btn" onclick="openAIImportModal()">
               <div class="quick-action-icon" style="background:var(--blue-bg);color:#1e40af;">✎</div>
               <div class="quick-action-label">AI Student Import</div>
             </button>
-            <button class="quick-action-btn" onclick="toast('Calendar import is coming soon.', '')">
+            <button class="quick-action-btn" onclick="navigate('calendar')">
               <div class="quick-action-icon" style="background:var(--red-bg);color:#991b1b;">🗂️</div>
               <div class="quick-action-label">Import Calendar</div>
             </button>
@@ -294,7 +286,7 @@ function dashboard() {
               <div class="quick-action-icon" style="background:var(--green-bg);color:#065f46;">📣</div>
               <div class="quick-action-label">Announcement</div>
             </button>
-            <button class="quick-action-btn" onclick="toast('Academic Years management is coming soon.', '')">
+            <button class="quick-action-btn" onclick="openAcademicYearsModal()">
               <div class="quick-action-icon" style="background:var(--green-bg);color:#065f46;">🗓️</div>
               <div class="quick-action-label">Academic Years</div>
             </button>
@@ -304,7 +296,7 @@ function dashboard() {
         <div class="card" style="margin-bottom:16px;">
           <div class="card-header">
             <div class="card-title">🏫 Schools</div>
-            <button class="btn btn-primary btn-sm" onclick="toast('School management coming soon.','')">+ Add School</button>
+            <button class="btn btn-primary btn-sm" onclick="openAddSchoolModal()">+ Add School</button>
           </div>
           <div class="table-wrap"><table>
             <thead><tr><th>SCHOOL</th><th>CLASSES</th><th>STUDENTS</th><th>TEACHERS</th><th>ACTIONS</th></tr></thead>
@@ -714,10 +706,10 @@ let _enrollmentTab = 'all';
 
 function enrollment() {
   document.getElementById('topbarActions').innerHTML = `
-    <button class="btn btn-secondary btn-sm" onclick="toast('Export CSV coming soon.','')">📄 Export CSV</button>
-    <button class="btn btn-secondary btn-sm" onclick="toast('Export PDF coming soon.','')">📄 Export PDF</button>
-    <button class="btn btn-secondary btn-sm" onclick="toast('Manage Forms coming soon.','')">📋 Manage Forms</button>
-    <button class="btn btn-primary" onclick="toast('New Form coming soon.','')">+ New Form</button>
+    <button class="btn btn-secondary btn-sm" onclick="exportEnrollmentCSV()">📄 Export CSV</button>
+    <button class="btn btn-secondary btn-sm" onclick="printEnrollmentPDF()">📄 Export PDF</button>
+    <button class="btn btn-secondary btn-sm" onclick="openManageForms()">📋 Manage Forms</button>
+    <button class="btn btn-primary" onclick="openFormBuilder()">+ New Form</button>
   `;
   renderEnrollmentApplications();
 }
@@ -776,7 +768,7 @@ function renderEnrollmentApplications() {
                   </div>
                   <h3 style="font-size:15px;font-weight:600;margin-bottom:4px;">No applications found</h3>
                   <p style="color:var(--text3);font-size:13px;margin-bottom:16px;">Applications will appear here when submitted</p>
-                  <button class="btn btn-primary" onclick="toast('Create Enrollment Form coming soon.','')">+ Create Enrollment Form</button>
+                  <button class="btn btn-primary" onclick="openFormBuilder()">+ Create Enrollment Form</button>
                 </div>
               </td></tr>
             ` : filtered.map(a => `
@@ -1086,7 +1078,7 @@ function classSetupWizard() {
                     <button class="btn btn-secondary btn-sm">Edit</button>
                   </div>
                 `).join('')}
-                <button class="btn btn-secondary btn-sm" style="align-self:flex-start;margin-top:4px;" onclick="toast('Add subject coming soon.','')">+ Add Subject</button>
+                <button class="btn btn-secondary btn-sm" style="align-self:flex-start;margin-top:4px;" onclick="openAddSubjectModal()">+ Add Subject</button>
               </div>
             ` : `
               <div style="text-align:center;padding:32px;color:var(--text4);">
@@ -1382,7 +1374,7 @@ function gradebook() {
                 ${enrolledCount} students
               </span>
               <span style="color:var(--text4);font-size:12.5px;">${todayStr}</span>
-              <button class="btn btn-primary btn-sm" onclick="toast('Gradebook for ${c.subject || c.name} coming soon.','')">View →</button>
+              <button class="btn btn-primary btn-sm" onclick="openGradebookDetail('${c.id}')">View →</button>
             </div>
           `;
         }).join('')}
@@ -1969,7 +1961,7 @@ function renderSettings(tab) {
             <label class="form-label">Monthly budget (USD, optional)</label>
             <input class="form-input" type="number" id="smsBudget" value="0" min="0" style="max-width:120px;" />
           </div>
-          <button class="btn btn-primary" style="background:#16a34a;border-color:#16a34a;display:flex;align-items:center;gap:8px;" onclick="toast('SMS setup coming soon!','success')">
+          <button class="btn btn-primary" style="background:#16a34a;border-color:#16a34a;display:flex;align-items:center;gap:8px;" onclick="saveSMSSettings()">
             <svg viewBox="0 0 20 20" fill="white" width="16" height="16"><path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/><path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/></svg>
             Turn on SMS & get a number
           </button>
@@ -1997,7 +1989,7 @@ function renderSettings(tab) {
         <div class="card">
           <div class="card-title" style="margin-bottom:16px;">Calendar Settings</div>
           <p style="font-size:13.5px;color:var(--text3);margin-bottom:16px;">Import or sync your school calendar with external services.</p>
-          <button class="btn btn-secondary" onclick="toast('Calendar import coming soon.','')">Import Calendar (.ics)</button>
+          <button class="btn btn-secondary" onclick="openCalendarImportModal()">Import Calendar (.ics)</button>
         </div>
       ` : tab === 'enrollments' ? `
         <div class="card">
@@ -2941,7 +2933,7 @@ function parents() {
   const parentList = DB.getList('parents');
   const students = DB.getList('students');
   document.getElementById('topbarActions').innerHTML = `
-    <button class="btn btn-secondary" onclick="toast('Archive coming soon.','')">
+    <button class="btn btn-secondary" onclick="showArchivedParents()">
       <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14" style="margin-right:4px;"><path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4zM3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/></svg>
       Archived
     </button>
@@ -3157,7 +3149,7 @@ function exportInfractionsCSV() {
 // PAGE: BILLING
 // =============================================
 function billing() {
-  document.getElementById('topbarActions').innerHTML = `<button class="btn btn-secondary" onclick="toast('Archive coming soon.','')">Archive</button>`;
+  document.getElementById('topbarActions').innerHTML = `<button class="btn btn-secondary" onclick="showArchivedInvoices()">Archive</button>`;
   const paymentSetup = DB.get('payment_setup');
 
   document.getElementById('mainContent').innerHTML = `
@@ -3409,8 +3401,8 @@ let _reportTab = 'all';
 
 function reportBuilder() {
   document.getElementById('topbarActions').innerHTML = `
-    <button class="btn btn-secondary" onclick="toast('Report cards coming soon.','')">📄 Report Cards</button>
-    <button class="btn btn-secondary" onclick="toast('Saved reports coming soon.','')">📌 Saved</button>
+    <button class="btn btn-secondary" onclick="openReportCardsModal()">📄 Report Cards</button>
+    <button class="btn btn-secondary" onclick="openSavedReportsModal()">📌 Saved</button>
   `;
   renderReportBuilder();
 }
@@ -3644,4 +3636,595 @@ function runReport(name) {
   }
 
   openModal(title, `<div style="min-width:480px;max-width:700px;">${bodyHTML}</div>`);
+}
+
+// =============================================
+// ENROLLMENT FORM BUILDER
+// =============================================
+let _formBuilderFields = [];
+const FIELD_TYPES = ['Text', 'Email', 'Phone', 'Date', 'Select', 'Checkbox', 'Textarea'];
+
+function openFormBuilder(editFormId) {
+  const existingForms = DB.getList('enrollment_forms');
+  const form = editFormId ? existingForms.find(f => f.id == editFormId) : null;
+  _formBuilderFields = form ? JSON.parse(JSON.stringify(form.fields)) : [
+    { id: 1, type: 'Text', label: 'First Name', required: true },
+    { id: 2, type: 'Text', label: 'Last Name', required: true },
+    { id: 3, type: 'Date', label: 'Date of Birth', required: true },
+    { id: 4, type: 'Email', label: 'Parent Email', required: true },
+    { id: 5, type: 'Phone', label: 'Parent Phone', required: false },
+  ];
+  renderFormBuilder(form);
+}
+
+function renderFormBuilder(form) {
+  openModal(form ? 'Edit Enrollment Form' : 'Create Enrollment Form', `
+    <div style="min-width:560px;max-width:700px;">
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">Form Name <span class="required">*</span></label>
+        <input class="form-input" id="fbFormName" value="${form ? form.name : 'Enrollment Application ' + (DB.getList('enrollment_forms').length + 1)}" placeholder="e.g. Fall 2026 Enrollment" />
+      </div>
+      <div class="form-group" style="margin-bottom:16px;">
+        <label class="form-label">Description</label>
+        <input class="form-input" id="fbFormDesc" value="${form ? (form.description || '') : ''}" placeholder="Brief description shown to applicants" />
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:13.5px;font-weight:700;">Form Fields</div>
+        <div style="display:flex;gap:6px;">
+          ${FIELD_TYPES.map(t => `<button class="btn btn-secondary btn-sm" onclick="addFormField('${t}')">+ ${t}</button>`).join('')}
+        </div>
+      </div>
+      <div id="fbFieldsList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
+        ${renderFormBuilderFields()}
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:8px;border-top:1px solid var(--border);">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEnrollmentForm(${form ? form.id : 'null'})">Save Form</button>
+      </div>
+    </div>
+  `);
+}
+
+function renderFormBuilderFields() {
+  if (_formBuilderFields.length === 0) return `<div style="text-align:center;padding:24px;color:var(--text4);font-size:13px;">No fields yet. Add fields above.</div>`;
+  return _formBuilderFields.map((f, i) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;">
+      <span style="font-size:12px;color:var(--text4);width:20px;text-align:right;">${i+1}.</span>
+      <span style="font-size:11.5px;background:var(--blue-bg);color:#1e40af;padding:2px 7px;border-radius:4px;font-weight:600;flex-shrink:0;">${f.type}</span>
+      <input class="form-input" value="${f.label}" oninput="_formBuilderFields[${i}].label=this.value" style="flex:1;padding:5px 8px;font-size:13px;" />
+      <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text3);flex-shrink:0;cursor:pointer;">
+        <input type="checkbox" ${f.required?'checked':''} onchange="_formBuilderFields[${i}].required=this.checked" style="accent-color:var(--primary);" /> Required
+      </label>
+      <button class="btn btn-danger btn-sm" onclick="_formBuilderFields.splice(${i},1);document.getElementById('fbFieldsList').innerHTML=renderFormBuilderFields()">✕</button>
+    </div>
+  `).join('');
+}
+
+function addFormField(type) {
+  _formBuilderFields.push({ id: Date.now(), type, label: type + ' Field', required: false });
+  document.getElementById('fbFieldsList').innerHTML = renderFormBuilderFields();
+}
+
+function saveEnrollmentForm(existingId) {
+  const name = document.getElementById('fbFormName').value.trim();
+  const desc = document.getElementById('fbFormDesc').value.trim();
+  if (!name) { toast('Please enter a form name.', 'error'); return; }
+  if (_formBuilderFields.length === 0) { toast('Add at least one field.', 'error'); return; }
+  if (existingId) {
+    DB.update('enrollment_forms', existingId, { name, description: desc, fields: _formBuilderFields, updatedAt: today() });
+    toast('Form updated!', 'success');
+  } else {
+    DB.push('enrollment_forms', { name, description: desc, fields: _formBuilderFields, active: true, responses: 0, createdAt: today() });
+    toast('Enrollment form created!', 'success');
+  }
+  closeModal();
+  enrollment();
+}
+
+function openManageForms() {
+  const forms = DB.getList('enrollment_forms');
+  openModal('Manage Enrollment Forms', `
+    <div style="min-width:500px;">
+      ${forms.length === 0 ? `
+        <div class="empty-state" style="padding:32px;">
+          <div class="empty-state-icon">📋</div>
+          <h3>No forms yet</h3>
+          <p>Create your first enrollment form to start accepting applications.</p>
+          <button class="btn btn-primary" onclick="closeModal();openFormBuilder()">+ Create Form</button>
+        </div>
+      ` : `
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${forms.map(f => `
+            <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg);border:1px solid var(--border);border-radius:10px;">
+              <div style="flex:1;">
+                <div style="font-weight:700;font-size:14px;">${f.name}</div>
+                <div style="font-size:12px;color:var(--text3);">${f.fields.length} fields · Created ${formatDate(f.createdAt)}</div>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="closeModal();openFormApplicationModal('${f.id}')">Apply</button>
+              <button class="btn btn-secondary btn-sm" onclick="closeModal();openFormBuilder('${f.id}')">Edit</button>
+              <button class="btn btn-danger btn-sm" onclick="if(confirm('Delete this form?')){DB.remove('enrollment_forms','${f.id}');openManageForms();}">Delete</button>
+            </div>
+          `).join('')}
+        </div>
+        <div style="margin-top:14px;text-align:right;">
+          <button class="btn btn-primary" onclick="closeModal();openFormBuilder()">+ New Form</button>
+        </div>
+      `}
+    </div>
+  `);
+}
+
+function openFormApplicationModal(formId) {
+  const form = DB.getList('enrollment_forms').find(f => f.id == formId);
+  if (!form) return;
+  openModal(form.name, `
+    <form onsubmit="submitFormApplication(event,'${formId}')" class="form-grid" style="min-width:440px;">
+      <p style="font-size:13px;color:var(--text3);margin-bottom:4px;">${form.description || 'Complete all required fields to submit your application.'}</p>
+      ${form.fields.map(f => `
+        <div class="form-group">
+          <label class="form-label">${f.label}${f.required ? ' <span class="required">*</span>' : ''}</label>
+          ${f.type === 'Textarea' ? `<textarea class="form-input" name="${f.label}" ${f.required ? 'required' : ''} rows="3" style="resize:vertical;"></textarea>` :
+            f.type === 'Select' ? `<select class="form-select" name="${f.label}" ${f.required ? 'required' : ''}><option value="">Select…</option></select>` :
+            f.type === 'Checkbox' ? `<label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" name="${f.label}" style="accent-color:var(--primary);" /> ${f.label}</label>` :
+            `<input class="form-input" name="${f.label}" type="${f.type === 'Email' ? 'email' : f.type === 'Phone' ? 'tel' : f.type === 'Date' ? 'date' : 'text'}" ${f.required ? 'required' : ''} />`}
+        </div>
+      `).join('')}
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Submit Application</button>
+      </div>
+    </form>
+  `);
+}
+
+function submitFormApplication(e, formId) {
+  e.preventDefault();
+  const form = DB.getList('enrollment_forms').find(f => f.id == formId);
+  const fd = new FormData(e.target);
+  const data = {};
+  for (const [k, v] of fd.entries()) data[k] = v;
+  const appNum = Math.floor(10000 + Math.random() * 90000);
+  DB.push('enrollment_apps', {
+    formId,
+    formName: form ? form.name : '',
+    name: (data['First Name'] || '') + ' ' + (data['Last Name'] || ''),
+    email: data['Parent Email'] || data['Email'] || '',
+    appNum,
+    form: form ? form.name : '',
+    submitted: today(),
+    status: 'pending',
+    payment: 'Unpaid',
+    data
+  });
+  closeModal();
+  toast(`Application #${appNum} submitted successfully!`, 'success');
+  enrollment();
+}
+
+function exportEnrollmentCSV() {
+  const apps = DB.getList('enrollment_apps');
+  if (apps.length === 0) { toast('No applications to export.', ''); return; }
+  const headers = ['Application #','Name','Email','Form','Submitted','Status','Payment'];
+  const rows = apps.map(a => [a.appNum, a.name, a.email, a.form, a.submitted, a.status, a.payment]);
+  const csv = [headers, ...rows].map(r => r.map(v => `"${v || ''}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'enrollment-applications.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV exported!', 'success');
+}
+
+function printEnrollmentPDF() {
+  const apps = DB.getList('enrollment_apps');
+  if (apps.length === 0) { toast('No applications to export.', ''); return; }
+  const win = window.open('', '_blank');
+  win.document.write(`<html><head><title>Enrollment Applications</title><style>body{font-family:sans-serif;padding:24px;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ddd;padding:8px;font-size:13px;}th{background:#f3f4f6;}</style></head><body>`);
+  win.document.write(`<h2>Enrollment Applications</h2><table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Form</th><th>Submitted</th><th>Status</th></tr></thead><tbody>`);
+  apps.forEach(a => { win.document.write(`<tr><td>${a.appNum}</td><td>${a.name}</td><td>${a.email}</td><td>${a.form}</td><td>${a.submitted}</td><td>${a.status}</td></tr>`); });
+  win.document.write(`</tbody></table></body></html>`);
+  win.document.close();
+  win.print();
+}
+
+// =============================================
+// MISC MODAL HELPERS
+// =============================================
+function openAIImportModal() {
+  openModal('AI Student Import', `
+    <div style="min-width:460px;">
+      <p style="font-size:13.5px;color:var(--text3);margin-bottom:16px;">Upload a CSV file with student data. We'll automatically detect columns and import students into your school.</p>
+      <div style="border:2px dashed var(--border2);border-radius:10px;padding:32px;text-align:center;margin-bottom:16px;cursor:pointer;" onclick="document.getElementById('csvFileInput').click()">
+        <div style="font-size:32px;margin-bottom:8px;">📂</div>
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Click to upload CSV</div>
+        <div style="font-size:12px;color:var(--text4);">Supports: First Name, Last Name, Email, Date of Birth, Gender, Class</div>
+        <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="processCSVImport(this)" />
+      </div>
+      <div id="csvPreview"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="csvImportBtn" style="display:none;" onclick="confirmCSVImport()">Import Students</button>
+      </div>
+    </div>
+  `);
+}
+
+let _csvImportData = [];
+function processCSVImport(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const lines = e.target.result.split('\n').filter(l => l.trim());
+    const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
+    _csvImportData = lines.slice(1).map(line => {
+      const vals = line.split(',').map(v => v.replace(/"/g,'').trim());
+      const row = {};
+      headers.forEach((h, i) => row[h] = vals[i] || '');
+      return row;
+    }).filter(r => Object.values(r).some(v => v));
+    const preview = document.getElementById('csvPreview');
+    preview.innerHTML = `<div style="font-size:13px;font-weight:600;margin-bottom:8px;">${_csvImportData.length} students found:</div>
+      <div class="table-wrap" style="max-height:180px;overflow-y:auto;"><table><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>
+        ${_csvImportData.slice(0,5).map(r=>`<tr>${headers.map(h=>`<td>${r[h]||'—'}</td>`).join('')}</tr>`).join('')}
+        ${_csvImportData.length > 5 ? `<tr><td colspan="${headers.length}" style="text-align:center;color:var(--text4);">…and ${_csvImportData.length-5} more</td></tr>` : ''}
+      </tbody></table></div>`;
+    document.getElementById('csvImportBtn').style.display = '';
+  };
+  reader.readAsText(file);
+}
+
+function confirmCSVImport() {
+  let imported = 0;
+  _csvImportData.forEach(row => {
+    const firstName = row['First Name'] || row['firstname'] || row['first_name'] || Object.values(row)[0] || '';
+    const lastName = row['Last Name'] || row['lastname'] || row['last_name'] || Object.values(row)[1] || '';
+    if (firstName) {
+      DB.push('students', { firstName, lastName, email: row['Email'] || row['email'] || '', dob: row['Date of Birth'] || row['dob'] || '', gender: row['Gender'] || row['gender'] || '', status: 'active' });
+      imported++;
+    }
+  });
+  closeModal();
+  toast(`${imported} students imported successfully!`, 'success');
+  students();
+}
+
+function openAcademicYearsModal() {
+  const years = DB.getList('academic_years');
+  const currentYear = new Date().getFullYear();
+  openModal('Academic Years', `
+    <div style="min-width:440px;">
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+        ${years.length === 0 ? `
+          <div style="text-align:center;padding:16px;color:var(--text4);font-size:13px;">No academic years configured yet.</div>
+        ` : years.map(y => `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:8px;">
+            <div>
+              <div style="font-weight:700;">${y.name}</div>
+              <div style="font-size:12px;color:var(--text3);">${formatDate(y.startDate)} – ${formatDate(y.endDate)}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              ${y.active ? `<span class="badge badge-green">Active</span>` : `<button class="btn btn-secondary btn-sm" onclick="setActiveYear('${y.id}')">Set Active</button>`}
+              <button class="btn btn-danger btn-sm" onclick="DB.remove('academic_years','${y.id}');openAcademicYearsModal();">Delete</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <form onsubmit="addAcademicYear(event)" class="form-grid">
+        <div style="font-size:13.5px;font-weight:700;margin-bottom:4px;">Add New Year</div>
+        <div class="form-grid form-grid-2">
+          <div class="form-group">
+            <label class="form-label">Year Name <span class="required">*</span></label>
+            <input class="form-input" name="name" required placeholder="${currentYear}-${currentYear+1}" value="${currentYear}-${currentYear+1}" />
+          </div>
+          <div></div>
+          <div class="form-group">
+            <label class="form-label">Start Date</label>
+            <input class="form-input" name="startDate" type="date" value="${currentYear}-08-01" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Date</label>
+            <input class="form-input" name="endDate" type="date" value="${currentYear+1}-06-30" />
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">Close</button>
+          <button type="submit" class="btn btn-primary">Add Year</button>
+        </div>
+      </form>
+    </div>
+  `);
+}
+
+function addAcademicYear(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  DB.push('academic_years', { name: fd.get('name'), startDate: fd.get('startDate'), endDate: fd.get('endDate'), active: DB.getList('academic_years').length === 0 });
+  toast('Academic year added!', 'success');
+  openAcademicYearsModal();
+}
+
+function setActiveYear(id) {
+  DB.getList('academic_years').forEach(y => DB.update('academic_years', y.id, { active: y.id == id }));
+  openAcademicYearsModal();
+}
+
+function openAddSchoolModal() {
+  openModal('Add School', `
+    <form onsubmit="submitAddSchool(event)" class="form-grid" style="min-width:400px;">
+      <p style="font-size:13px;color:var(--text3);">Add another school branch to manage under the same account.</p>
+      <div class="form-group">
+        <label class="form-label">School Name <span class="required">*</span></label>
+        <input class="form-input" name="name" required placeholder="Branch Name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Address</label>
+        <input class="form-input" name="address" placeholder="123 Main St, City, State" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contact Email</label>
+        <input class="form-input" name="email" type="email" placeholder="school@example.com" />
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add School</button>
+      </div>
+    </form>
+  `);
+}
+
+function submitAddSchool(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  DB.push('schools', { name: fd.get('name'), address: fd.get('address'), email: fd.get('email'), createdAt: today() });
+  closeModal();
+  toast('School added successfully!', 'success');
+  dashboard();
+}
+
+function openGradebookDetail(classId) {
+  const cls = DB.getList('classes').find(c => c.id == classId);
+  const students = DB.getList('students').filter(s => s.classId == classId);
+  const grades = DB.getList('grades').filter(g => g.classId == classId || (cls && g.subject === (cls.subject || cls.name)));
+  if (!cls) return;
+  openModal(`${cls.subject || cls.name} Gradebook`, `
+    <div style="min-width:560px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div style="font-size:13px;color:var(--text3);">${students.length} students · ${grades.length} assignments</div>
+        <button class="btn btn-primary btn-sm" onclick="closeModal();openAddGradeModal()">+ Add Grade</button>
+      </div>
+      ${students.length === 0 ? `
+        <div class="empty-state" style="padding:32px;"><div class="empty-state-icon">👥</div><h3>No students in this class</h3><p>Assign students to this class from the Students page.</p></div>
+      ` : `
+        <div class="table-wrap"><table>
+          <thead><tr><th>Student</th><th>Assignments</th><th>Average</th></tr></thead>
+          <tbody>
+            ${students.map(s => {
+              const sg = grades.filter(g => g.studentId == s.id);
+              const avg = sg.length ? Math.round(sg.reduce((a,g) => a + g.score/g.total*100, 0)/sg.length) : null;
+              return `<tr>
+                <td><strong>${s.firstName} ${s.lastName}</strong></td>
+                <td>${sg.length}</td>
+                <td>${avg !== null ? `<span class="badge ${avg>=90?'badge-green':avg>=70?'badge-blue':'badge-red'}">${avg}%</span>` : '—'}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table></div>
+      `}
+      ${grades.length > 0 ? `
+        <div style="margin-top:16px;">
+          <div style="font-size:13.5px;font-weight:700;margin-bottom:8px;">Recent Assignments</div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Student</th><th>Assignment</th><th>Score</th><th>Date</th></tr></thead>
+            <tbody>
+              ${grades.slice(-5).reverse().map(g => {
+                const s = DB.getList('students').find(st => st.id == g.studentId);
+                const pctV = Math.round(g.score/g.total*100);
+                return `<tr><td>${s ? s.firstName+' '+s.lastName : '—'}</td><td>${g.assignment}</td><td><span class="badge ${pctV>=90?'badge-green':pctV>=70?'badge-blue':'badge-red'}">${g.score}/${g.total}</span></td><td>${formatDate(g.date)}</td></tr>`;
+              }).join('')}
+            </tbody>
+          </table></div>
+        </div>
+      ` : ''}
+    </div>
+  `);
+}
+
+function openAddSubjectModal() {
+  openModal('Add Subject', `
+    <form onsubmit="submitAddSubject(event)" class="form-grid" style="min-width:360px;">
+      <div class="form-group">
+        <label class="form-label">Subject Name <span class="required">*</span></label>
+        <input class="form-input" name="subject" required placeholder="e.g. Arabic, Fiqh, Tajweed" autofocus />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Grade / Level</label>
+        <input class="form-input" name="level" placeholder="e.g. Grade 1, Beginner" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Teacher</label>
+        <select class="form-select" name="teacher">
+          <option value="">Unassigned</option>
+          ${DB.getList('staff').map(s => `<option value="${s.name}">${s.name}</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Subject</button>
+      </div>
+    </form>
+  `);
+}
+
+function submitAddSubject(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const subject = fd.get('subject').trim();
+  const level = fd.get('level').trim();
+  const teacher = fd.get('teacher');
+  if (!subject) return;
+  if (_classSetupTemplate) CLASS_TEMPLATES[_classSetupTemplate].push(subject);
+  DB.push('classes', { name: subject, subject, grade: level, level: _classSetupTemplate || level, teacher, schedule: '' });
+  closeModal();
+  toast(`Subject "${subject}" added!`, 'success');
+  classes();
+}
+
+function saveSMSSettings() {
+  const enabled = document.getElementById('smsEnabled')?.checked;
+  const budget = document.getElementById('smsBudget')?.value;
+  DB.set('sms_settings', { enabled: true, budget: budget || 0, activatedAt: today() });
+  toast('SMS enabled! You will receive a number within 24 hours.', 'success');
+}
+
+function openCalendarImportModal() {
+  openModal('Import Calendar (.ics)', `
+    <div style="min-width:440px;">
+      <p style="font-size:13.5px;color:var(--text3);margin-bottom:16px;">Upload an .ics file to import events from Google Calendar, Apple Calendar, or Outlook.</p>
+      <div style="border:2px dashed var(--border2);border-radius:10px;padding:32px;text-align:center;margin-bottom:16px;cursor:pointer;" onclick="document.getElementById('icsFileInput').click()">
+        <div style="font-size:32px;margin-bottom:8px;">📅</div>
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px;">Click to upload .ics file</div>
+        <div style="font-size:12px;color:var(--text4);">Exports from Google Calendar, Outlook, Apple Calendar</div>
+        <input type="file" id="icsFileInput" accept=".ics" style="display:none;" onchange="processICSImport(this)" />
+      </div>
+      <div id="icsPreview"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="icsImportBtn" style="display:none;" onclick="confirmICSImport()">Import Events</button>
+      </div>
+    </div>
+  `);
+}
+
+let _icsEvents = [];
+function processICSImport(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const text = e.target.result;
+    _icsEvents = [];
+    const eventBlocks = text.split('BEGIN:VEVENT').slice(1);
+    eventBlocks.forEach(block => {
+      const get = key => { const m = block.match(new RegExp(key + '[^:]*:([^\\r\\n]*)'));return m ? m[1].trim() : ''; };
+      const dtstart = get('DTSTART');
+      const dateStr = dtstart.replace(/T.*/,'').replace(/(\d{4})(\d{2})(\d{2})/,'$1-$2-$3');
+      const title = get('SUMMARY');
+      if (title && dateStr) _icsEvents.push({ title, date: dateStr, type: 'event' });
+    });
+    document.getElementById('icsPreview').innerHTML = _icsEvents.length === 0
+      ? `<p style="color:var(--red);font-size:13px;">No events found in file.</p>`
+      : `<p style="font-size:13px;color:var(--text3);">${_icsEvents.length} events found. First few:</p>
+         <ul style="font-size:13px;margin:8px 0;padding-left:18px;">${_icsEvents.slice(0,5).map(ev=>`<li><strong>${ev.title}</strong> — ${ev.date}</li>`).join('')}${_icsEvents.length>5?`<li style="color:var(--text4);">…and ${_icsEvents.length-5} more</li>`:''}</ul>`;
+    if (_icsEvents.length > 0) document.getElementById('icsImportBtn').style.display = '';
+  };
+  reader.readAsText(file);
+}
+
+function confirmICSImport() {
+  _icsEvents.forEach(ev => DB.push('events', ev));
+  closeModal();
+  toast(`${_icsEvents.length} events imported!`, 'success');
+  calendar();
+}
+
+function showArchivedParents() {
+  const archived = DB.getList('parents').filter(p => p.archived);
+  openModal('Archived Parents', `
+    <div style="min-width:460px;">
+      ${archived.length === 0
+        ? `<div class="empty-state" style="padding:32px;"><div class="empty-state-icon">📂</div><h3>No archived parents</h3><p>Parents you archive will appear here.</p></div>`
+        : `<div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Action</th></tr></thead><tbody>
+            ${archived.map(p => `<tr><td><strong>${p.name}</strong></td><td>${p.email||'—'}</td>
+              <td><button class="btn btn-secondary btn-sm" onclick="DB.update('parents','${p.id}',{archived:false});showArchivedParents();">Restore</button></td></tr>`).join('')}
+           </tbody></table></div>`}
+    </div>
+  `);
+}
+
+function showArchivedInvoices() {
+  const invoices = DB.getList('invoices').filter(i => i.status === 'paid');
+  openModal('Paid / Archived Invoices', `
+    <div style="min-width:500px;">
+      ${invoices.length === 0
+        ? `<div class="empty-state" style="padding:32px;"><div class="empty-state-icon">💳</div><h3>No paid invoices yet</h3><p>Paid invoices will appear here.</p></div>`
+        : `<div class="table-wrap"><table><thead><tr><th>Student</th><th>Amount</th><th>Paid On</th></tr></thead><tbody>
+            ${invoices.map(i => { const s = DB.getList('students').find(st => st.id == i.studentId);
+              return `<tr><td>${s ? s.firstName+' '+s.lastName : '—'}</td><td>$${parseFloat(i.amount||0).toFixed(2)}</td><td>${formatDate(i.paidAt)}</td></tr>`;
+            }).join('')}
+           </tbody></table></div>`}
+    </div>
+  `);
+}
+
+function openReportCardsModal() {
+  const students = DB.getList('students');
+  const grades = DB.getList('grades');
+  openModal('Report Cards', `
+    <div style="min-width:560px;">
+      <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">Generate report cards for all students based on recorded grades.</p>
+      ${students.length === 0 ? `<div class="empty-state" style="padding:24px;"><p>No students enrolled yet.</p></div>` : `
+        <div class="table-wrap"><table>
+          <thead><tr><th>Student</th><th>Grade</th><th>Assignments</th><th>Average</th><th>Action</th></tr></thead>
+          <tbody>
+            ${students.map(s => {
+              const sg = grades.filter(g => g.studentId == s.id);
+              const avg = sg.length ? Math.round(sg.reduce((a,g) => a + g.score/g.total*100, 0)/sg.length) : null;
+              const cls = DB.getList('classes').find(c => c.id == s.classId);
+              return `<tr>
+                <td><strong>${s.firstName} ${s.lastName}</strong></td>
+                <td>${cls ? cls.name : '—'}</td>
+                <td>${sg.length}</td>
+                <td>${avg !== null ? `<span class="badge ${avg>=90?'badge-green':avg>=70?'badge-blue':'badge-red'}">${avg}%</span>` : '—'}</td>
+                <td><button class="btn btn-secondary btn-sm" onclick="printReportCard('${s.id}')">Print</button></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table></div>
+        <div style="margin-top:12px;text-align:right;">
+          <button class="btn btn-primary" onclick="printAllReportCards()">Print All Report Cards</button>
+        </div>
+      `}
+    </div>
+  `);
+}
+
+function printReportCard(studentId) {
+  const s = DB.getList('students').find(st => st.id == studentId);
+  if (!s) return;
+  const sg = DB.getList('grades').filter(g => g.studentId == studentId);
+  const avg = sg.length ? Math.round(sg.reduce((a,g) => a + g.score/g.total*100, 0)/sg.length) : null;
+  const cls = DB.getList('classes').find(c => c.id == s.classId);
+  const user = getUser();
+  const win = window.open('', '_blank');
+  win.document.write(`<html><head><title>Report Card – ${s.firstName} ${s.lastName}</title>
+  <style>body{font-family:sans-serif;padding:40px;max-width:600px;margin:0 auto;}h1{font-size:22px;}h2{font-size:16px;color:#444;}table{width:100%;border-collapse:collapse;margin-top:16px;}th,td{border:1px solid #ddd;padding:8px;font-size:13px;}th{background:#f3f4f6;}.avg{font-size:18px;font-weight:bold;margin-top:16px;}</style>
+  </head><body>
+  <h1>${user.schoolName || 'SchoolTrack'}</h1>
+  <h2>Report Card</h2>
+  <p><strong>Student:</strong> ${s.firstName} ${s.lastName}</p>
+  <p><strong>Class:</strong> ${cls ? cls.name : '—'}</p>
+  <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+  <table><thead><tr><th>Subject</th><th>Assignment</th><th>Score</th><th>Date</th></tr></thead><tbody>
+  ${sg.map(g => `<tr><td>${g.subject}</td><td>${g.assignment}</td><td>${g.score}/${g.total} (${Math.round(g.score/g.total*100)}%)</td><td>${formatDate(g.date)}</td></tr>`).join('')}
+  </tbody></table>
+  <p class="avg">Overall Average: ${avg !== null ? avg + '%' : 'N/A'}</p>
+  </body></html>`);
+  win.document.close(); win.print();
+}
+
+function printAllReportCards() {
+  DB.getList('students').forEach(s => printReportCard(s.id));
+}
+
+function openSavedReportsModal() {
+  const saved = DB.getList('saved_reports');
+  openModal('Saved Reports', `
+    <div style="min-width:440px;">
+      ${saved.length === 0
+        ? `<div class="empty-state" style="padding:32px;"><div class="empty-state-icon">📌</div><h3>No saved reports</h3><p>After running a report, you can save it here for quick access.</p></div>`
+        : `<div class="table-wrap"><table><thead><tr><th>Report</th><th>Saved On</th><th>Action</th></tr></thead><tbody>
+            ${saved.map(r => `<tr><td><strong>${r.name}</strong></td><td>${formatDate(r.savedAt)}</td>
+              <td><button class="btn btn-primary btn-sm" onclick="closeModal();runReport('${r.name}')">Run</button>
+              <button class="btn btn-danger btn-sm" onclick="DB.remove('saved_reports','${r.id}');openSavedReportsModal();">Remove</button></td></tr>`).join('')}
+           </tbody></table></div>`}
+    </div>
+  `);
 }
