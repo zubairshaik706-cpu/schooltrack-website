@@ -60,12 +60,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // Set user info
   document.getElementById('userName').textContent = user.firstName + ' ' + user.lastName;
   document.getElementById('userAvatar').textContent = (user.firstName[0] || 'A').toUpperCase();
-  document.getElementById('schoolName').textContent = user.schoolName || 'My School';
+  const schoolName = user.schoolName || 'My School';
+  document.getElementById('schoolName').textContent = schoolName;
+  document.getElementById('schoolBadgeIcon').textContent = (schoolName[0] || 'S').toUpperCase();
+  document.getElementById('sidebarUserName').textContent = (user.firstName || 'Admin') + ' · ' + (user.isStaff ? (user.role || 'Staff') : 'ADMIN');
 
   // Sidebar toggle
   const sidebar = document.getElementById('sidebar');
   document.getElementById('menuToggle').addEventListener('click', () => sidebar.classList.toggle('open'));
   document.getElementById('sidebarClose').addEventListener('click', () => sidebar.classList.remove('open'));
+  document.getElementById('sidebarCollapseBtn').addEventListener('click', () => sidebar.classList.remove('open'));
+
+  // Dark mode toggle
+  document.getElementById('darkModeToggle').addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    toast(document.body.classList.contains('dark-mode') ? 'Dark mode on' : 'Dark mode off', '');
+  });
+
+  // Expandable nav groups
+  document.querySelectorAll('.nav-group-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const group = btn.closest('.nav-group');
+      group.classList.toggle('open');
+    });
+  });
 
   // Logout
   document.getElementById('logoutBtn').addEventListener('click', logout);
@@ -98,11 +116,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('modalClose').addEventListener('click', closeModal);
   document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 
-  // Nav routing
-  document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+  // Nav routing — both top-level items and sub-items
+  document.querySelectorAll('.nav-item[data-page], .nav-sub-item[data-page]').forEach(item => {
     item.addEventListener('click', e => {
       e.preventDefault();
       navigate(item.dataset.page);
+      // Auto-open parent group when sub-item clicked
+      const group = item.closest('.nav-group');
+      if (group) group.classList.add('open');
       if (window.innerWidth <= 900) sidebar.classList.remove('open');
     });
   });
@@ -113,22 +134,37 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function navigate(page) {
-  document.querySelectorAll('.nav-item[data-page]').forEach(i => i.classList.toggle('active', i.dataset.page === page));
+  // Mark active on both top-level nav items and sub-items
+  document.querySelectorAll('.nav-item[data-page], .nav-sub-item[data-page]').forEach(i => {
+    i.classList.toggle('active', i.dataset.page === page);
+  });
+  // Also auto-open the group containing the active sub-item
+  document.querySelectorAll('.nav-sub-item[data-page]').forEach(i => {
+    if (i.dataset.page === page) {
+      const grp = i.closest('.nav-group');
+      if (grp) grp.classList.add('open');
+    }
+  });
   window.location.hash = page;
 
   const titles = {
-    dashboard: 'Overview', students: 'Students', enrollment: 'Enrollment',
-    classes: 'Classes', attendance: 'Attendance', gradebook: 'Gradebook',
-    hifz: 'Hifz Tracking', messages: 'Messages', settings: 'Settings',
+    dashboard: 'Dashboard', students: 'Students', enrollment: 'Enrollment Applications',
+    classes: 'All Classes', attendance: 'Attendance', gradebook: 'All Gradebooks',
+    hifz: 'Hifz Tracking', messages: 'Communications', settings: 'Settings',
     salah: 'Salah Tracker', tuition: 'Tuition', calendar: 'Calendar',
-    quizzes: 'Quizzes', staff: 'Staff'
+    quizzes: 'Quizzes', staff: 'Teachers', admins: 'Admins', parents: 'Parents',
+    infractions: 'Behavior Tracking', billing: 'Billing', 'report-builder': 'Report Builder'
   };
   const pageLabel = titles[page] || page;
   document.getElementById('pageTitle').textContent = pageLabel;
   document.title = pageLabel + ' – SchoolTrack';
   document.getElementById('topbarActions').innerHTML = '';
 
-  const pages = { dashboard, students, enrollment, classes, attendance, gradebook, hifz, messages, settings, salah, tuition, calendar, quizzes, staff };
+  const pages = {
+    dashboard, students, enrollment, classes, attendance, gradebook, hifz,
+    messages, settings, salah, tuition, calendar, quizzes, staff,
+    admins, parents, infractions, billing, 'report-builder': reportBuilder
+  };
   if (pages[page]) pages[page]();
   else document.getElementById('mainContent').innerHTML = `<div class="empty-state"><div class="empty-state-icon">🚧</div><h3>Coming soon</h3><p>This page is under construction.</p></div>`;
 }
@@ -318,19 +354,60 @@ function dashboard() {
     </div>
 
     <div class="card" style="margin-top:16px;">
-      <div class="card-header"><div class="card-title">🏫 Classes Overview</div><button class="btn btn-secondary btn-sm" onclick="navigate('classes')">Manage</button></div>
-      ${classes.length === 0
-        ? `<div class="empty-state"><p>No classes yet. <a href="#" onclick="event.preventDefault();navigate('classes')" style="color:var(--primary)">Add one →</a></p></div>`
-        : `<div class="table-wrap"><table>
-            <thead><tr><th>Class</th><th>Teacher</th><th>Students</th></tr></thead>
-            <tbody>
-              ${classes.map(c => {
-                const cnt = students.filter(s => String(s.classId) === String(c.id)).length;
-                return `<tr><td style="font-weight:600;color:var(--text);">${c.name}</td><td>${c.teacher || '—'}</td><td><span class="badge badge-blue">${cnt} students</span></td></tr>`;
-              }).join('')}
-            </tbody>
-          </table></div>`
-      }
+      <div class="card-header">
+        <div class="card-title">🏫 Schools</div>
+        <button class="btn btn-primary btn-sm" onclick="toast('School management coming soon.','')">+ Add School</button>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>SCHOOL</th><th>CLASSES</th><th>STUDENTS</th><th>TEACHERS</th><th>ACTIONS</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <strong>${user.schoolName || 'My School'}</strong>
+                <span class="badge badge-green" style="font-size:10px;">● SELECTED</span>
+              </div>
+              <div style="font-size:12px;color:var(--text4);">${user.email || ''}</div>
+            </td>
+            <td>${classes.length}</td>
+            <td>${students.length}</td>
+            <td>${staffList.length}</td>
+            <td><button class="btn btn-secondary btn-sm" onclick="navigate('settings')">✎ Edit</button></td>
+          </tr>
+        </tbody>
+      </table></div>
+      <div style="padding:8px 0 4px;font-size:12px;color:var(--text4);">1 school total &nbsp;<a href="#" style="color:var(--primary);font-weight:600;" onclick="event.preventDefault()">View all schools →</a></div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="card-header">
+        <div class="card-title">📅 Attendance Overview</div>
+        <a href="#" onclick="event.preventDefault();navigate('attendance')" style="font-size:12px;color:var(--primary);font-weight:600;">View All →</a>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:4px 0 8px;">
+        <div class="att-overview-box">
+          <div class="att-overview-label">TODAY</div>
+          ${(() => {
+            const todayRec = DB.getList('attendance').filter(r => r.date === today());
+            if (todayRec.length === 0) return `<div class="att-overview-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><div>No attendance recorded today</div></div>`;
+            const present = todayRec.filter(r => r.status === 'present').length;
+            const absent = todayRec.filter(r => r.status === 'absent').length;
+            return `<div style="display:flex;gap:16px;padding:8px 0;"><div><div style="font-size:22px;font-weight:700;color:#10b981;">${present}</div><div style="font-size:12px;color:var(--text4);">Present</div></div><div><div style="font-size:22px;font-weight:700;color:#ef4444;">${absent}</div><div style="font-size:12px;color:var(--text4);">Absent</div></div></div>`;
+          })()}
+        </div>
+        <div class="att-overview-box">
+          <div class="att-overview-label">THIS WEEK</div>
+          ${(() => {
+            const mon = mondayOf(new Date());
+            const weekDates = Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(d.getDate()+i);return isoDate(d);});
+            const weekRec = DB.getList('attendance').filter(r => weekDates.includes(r.date));
+            if (weekRec.length === 0) return `<div class="att-overview-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><div>No attendance data this week</div></div>`;
+            const present = weekRec.filter(r => r.status === 'present').length;
+            const absent = weekRec.filter(r => r.status === 'absent').length;
+            return `<div style="display:flex;gap:16px;padding:8px 0;"><div><div style="font-size:22px;font-weight:700;color:#10b981;">${present}</div><div style="font-size:12px;color:var(--text4);">Present</div></div><div><div style="font-size:22px;font-weight:700;color:#ef4444;">${absent}</div><div style="font-size:12px;color:var(--text4);">Absent</div></div></div>`;
+          })()}
+        </div>
+      </div>
     </div>
   `;
 }
@@ -2690,4 +2767,386 @@ function removeParent(id) {
   DB.remove('parents', id);
   toast('Parent removed.','');
   settings();
+}
+
+// =============================================
+// PAGE: ADMINS
+// =============================================
+function admins() {
+  const user = getUser();
+  document.getElementById('mainContent').innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="breadcrumb">Dashboard › People</div>
+        <h2>Admins</h2>
+        <p>Manage administrator accounts</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><div style="display:flex;align-items:center;gap:10px;"><div class="student-avatar" style="background:#2563eb;">${(user.firstName?.[0]||'A').toUpperCase()}</div><strong>${user.firstName||''} ${user.lastName||''}</strong></div></td>
+              <td style="color:var(--text3);">${user.email||'—'}</td>
+              <td><span class="badge badge-blue">Admin</span></td>
+              <td><span class="badge badge-green">Active</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// =============================================
+// PAGE: PARENTS
+// =============================================
+function parents() {
+  const parentList = DB.getList('parents');
+  const students = DB.getList('students');
+  document.getElementById('topbarActions').innerHTML = `<button class="btn btn-primary" onclick="navigate('settings')">+ Add Parent</button>`;
+  document.getElementById('mainContent').innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="breadcrumb">Dashboard › People</div>
+        <h2>Parents</h2>
+        <p>${parentList.length} parent account${parentList.length !== 1 ? 's' : ''}</p>
+      </div>
+    </div>
+    <div class="card">
+      ${parentList.length === 0 ? `
+        <div class="empty-state">
+          <div class="empty-state-icon">👨‍👩‍👧</div>
+          <h3>No parent accounts yet</h3>
+          <p>Add parents from Settings → Parent Portal.</p>
+          <button class="btn btn-primary" onclick="navigate('settings')">Go to Settings</button>
+        </div>` : `
+        <div class="table-wrap"><table>
+          <thead><tr><th>Parent</th><th>Email</th><th>Children</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${parentList.map(p => {
+              const children = students.filter(s => (p.studentIds||[]).includes(String(s.id)));
+              return `<tr>
+                <td><div style="display:flex;align-items:center;gap:10px;"><div class="student-avatar" style="background:#8b5cf6;">${(p.name?.[0]||'P').toUpperCase()}</div><strong>${p.name||'—'}</strong></div></td>
+                <td style="color:var(--text3);">${p.email||'—'}</td>
+                <td>${children.map(c=>`${c.firstName} ${c.lastName}`).join(', ')||'—'}</td>
+                <td><button class="btn btn-secondary btn-sm" onclick="navigate('settings')">Manage</button></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table></div>`}
+    </div>
+  `;
+}
+
+// =============================================
+// PAGE: INFRACTIONS (Behavior Tracking)
+// =============================================
+let _infractionTab = 'all';
+
+function infractions() {
+  document.getElementById('topbarActions').innerHTML = `<button class="btn btn-primary" onclick="openNewInfractionModal()">+ New Infraction</button>`;
+  renderInfractions();
+}
+
+function renderInfractions() {
+  const all = DB.getList('infractions');
+  const tabs = ['all','reported','under-review','resolved'];
+  const tabLabels = { all:'All', reported:'Reported', 'under-review':'Under Review', resolved:'Resolved' };
+  const filtered = _infractionTab === 'all' ? all : all.filter(r => r.status === _infractionTab);
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="breadcrumb">Dashboard</div>
+        <h2>Behavior Tracking</h2>
+        <p>Manage and track student infractions</p>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary" onclick="exportInfractionsCSV()">⬇ Export</button>
+        <button class="btn btn-primary" onclick="openNewInfractionModal()">+ New Infraction</button>
+      </div>
+    </div>
+
+    <div class="tabs" style="margin-bottom:0;">
+      ${tabs.map(t => `<button class="tab-btn ${_infractionTab===t?'active':''}" onclick="_infractionTab='${t}';renderInfractions();">${tabLabels[t]} <span style="font-size:11px;background:var(--bg2);border-radius:99px;padding:1px 6px;margin-left:3px;">${t==='all'?all.length:all.filter(r=>r.status===t).length}</span></button>`).join('')}
+    </div>
+    <div style="border-bottom:1px solid var(--border);margin-bottom:16px;"></div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;">
+        <div>
+          <div style="font-size:12px;color:var(--text4);margin-bottom:4px;">Severity</div>
+          <select class="form-select" onchange="renderInfractions()"><option>All Severities</option><option>Low</option><option>Medium</option><option>High</option></select>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--text4);margin-bottom:4px;">Category</div>
+          <select class="form-select" onchange="renderInfractions()"><option>All Categories</option><option>Behavior</option><option>Attendance</option><option>Academic</option><option>Other</option></select>
+        </div>
+        <button class="btn btn-secondary" style="display:flex;align-items:center;gap:6px;">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.553.894l-4 2A1 1 0 016 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd"/></svg>
+          Filter
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      ${filtered.length === 0 ? `
+        <div class="empty-state">
+          <div style="width:56px;height:56px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="24" height="24" style="color:var(--text4);"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+          </div>
+          <h3>No infractions found</h3>
+          <p>No behavior incidents have been recorded yet</p>
+        </div>` : `
+        <div class="table-wrap"><table>
+          <thead><tr><th>STUDENT</th><th>CATEGORY</th><th>SEVERITY</th><th>DATE</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+          <tbody>
+            ${filtered.map(r => `
+              <tr>
+                <td><strong>${r.studentName||'—'}</strong><br><span style="font-size:12px;color:var(--text4);">${r.description||''}</span></td>
+                <td><span class="badge badge-gray">${r.category||'Other'}</span></td>
+                <td><span class="badge ${r.severity==='High'?'badge-red':r.severity==='Medium'?'badge-yellow':'badge-gray'}">${r.severity||'Low'}</span></td>
+                <td style="color:var(--text3);">${formatDate(r.date)}</td>
+                <td><span class="badge ${r.status==='resolved'?'badge-green':r.status==='under-review'?'badge-blue':'badge-yellow'}">${r.status||'reported'}</span></td>
+                <td>
+                  <select class="form-select" style="width:130px;font-size:12px;padding:4px 8px;" onchange="updateInfractionStatus('${r.id}',this.value)">
+                    <option value="reported" ${r.status==='reported'?'selected':''}>Reported</option>
+                    <option value="under-review" ${r.status==='under-review'?'selected':''}>Under Review</option>
+                    <option value="resolved" ${r.status==='resolved'?'selected':''}>Resolved</option>
+                  </select>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table></div>`}
+    </div>
+  `;
+}
+
+function openNewInfractionModal() {
+  const students = DB.getList('students').filter(s=>s.status==='active');
+  openModal('New Infraction', `
+    <form onsubmit="submitInfraction(event)" class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Student <span class="required">*</span></label>
+        <select class="form-select" name="studentId" required>
+          <option value="">Select student…</option>
+          ${students.map(s=>`<option value="${s.id}">${s.firstName} ${s.lastName}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-grid form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select" name="category">
+            <option>Behavior</option><option>Attendance</option><option>Academic</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Severity</label>
+          <select class="form-select" name="severity">
+            <option>Low</option><option>Medium</option><option>High</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input class="form-input" name="date" type="date" value="${today()}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-textarea" name="description" placeholder="Describe what happened…"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </div>
+    </form>
+  `);
+}
+
+function submitInfraction(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const sid = fd.get('studentId');
+  const s = DB.find('students', sid);
+  DB.push('infractions', {
+    studentId: sid, studentName: s ? `${s.firstName} ${s.lastName}` : '—',
+    category: fd.get('category'), severity: fd.get('severity'),
+    date: fd.get('date'), description: fd.get('description'), status: 'reported'
+  });
+  closeModal();
+  toast('Infraction recorded.', 'success');
+  renderInfractions();
+}
+
+function updateInfractionStatus(id, status) {
+  DB.update('infractions', id, { status });
+  toast('Status updated.', 'success');
+}
+
+function exportInfractionsCSV() {
+  const rows = DB.getList('infractions');
+  const csv = ['Student,Category,Severity,Date,Status,Description',
+    ...rows.map(r => `"${r.studentName}","${r.category}","${r.severity}","${r.date}","${r.status}","${(r.description||'').replace(/"/g,'""')}"`)
+  ].join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = 'infractions.csv'; a.click();
+}
+
+// =============================================
+// PAGE: BILLING
+// =============================================
+function billing() {
+  document.getElementById('topbarActions').innerHTML = `<button class="btn btn-secondary" onclick="toast('Archive coming soon.','')">Archive</button>`;
+  document.getElementById('mainContent').innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="breadcrumb">Dashboard</div>
+        <h2>Billing</h2>
+        <p>Manage invoices and collect tuition payments</p>
+      </div>
+    </div>
+    <div class="card">
+      <div style="max-width:460px;margin:40px auto;text-align:center;padding:20px;">
+        <div style="width:72px;height:72px;border-radius:16px;background:#2563eb;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+          <svg viewBox="0 0 24 24" fill="white" width="36" height="36"><path d="M4 4h16a2 2 0 012 2v1H2V6a2 2 0 012-2zm-2 5h20v9a2 2 0 01-2 2H4a2 2 0 01-2-2V9zm5 5a1 1 0 100 2h2a1 1 0 100-2H7z"/></svg>
+        </div>
+        <h3 style="font-size:20px;font-weight:700;margin-bottom:8px;">Set Up Payment Collection</h3>
+        <p style="color:var(--text3);font-size:14px;margin-bottom:24px;line-height:1.6;">Connect your payment account to start collecting tuition payments from parents. Payments go directly to your bank account.</p>
+        <div style="display:flex;justify-content:center;gap:28px;margin-bottom:28px;">
+          <div style="text-align:center;">
+            <div style="width:44px;height:44px;border-radius:10px;background:#eff6ff;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+              <svg viewBox="0 0 20 20" fill="#2563eb" width="22" height="22"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            </div>
+            <div style="font-size:12.5px;font-weight:600;">Secure</div>
+            <div style="font-size:11px;color:var(--text4);">PCI compliant</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:44px;height:44px;border-radius:10px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+              <svg viewBox="0 0 20 20" fill="#16a34a" width="22" height="22"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
+            </div>
+            <div style="font-size:12.5px;font-weight:600;">Fast Payouts</div>
+            <div style="font-size:11px;color:var(--text4);">2-day transfers</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="width:44px;height:44px;border-radius:10px;background:#fefce8;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+              <svg viewBox="0 0 20 20" fill="#ca8a04" width="22" height="22"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/></svg>
+            </div>
+            <div style="font-size:12.5px;font-weight:600;">All Cards</div>
+            <div style="font-size:11px;color:var(--text4);">Visa, MC, Amex</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="padding:11px 28px;font-size:14.5px;" onclick="toast('Payment setup coming soon!','')">→ Get Started</button>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <div class="card-header">
+        <div class="card-title">💳 Tuition Payments</div>
+        <button class="btn btn-secondary btn-sm" onclick="navigate('tuition')">View Tuition →</button>
+      </div>
+      <div class="empty-state" style="padding:24px;">
+        <p style="color:var(--text3);">Set up payment collection above to start accepting tuition payments.</p>
+      </div>
+    </div>
+  `;
+}
+
+// =============================================
+// PAGE: REPORT BUILDER
+// =============================================
+let _reportTab = 'all';
+
+function reportBuilder() {
+  document.getElementById('topbarActions').innerHTML = `
+    <button class="btn btn-secondary" onclick="toast('Saved reports coming soon.','')">Saved</button>
+    <button class="btn btn-secondary" onclick="toast('Report cards coming soon.','')">Report Cards</button>
+  `;
+  renderReportBuilder();
+}
+
+function renderReportBuilder() {
+  const tabs = ['all','attendance','grades','directory','hifz','behavior','billing','profile'];
+  const reports = [
+    { name: 'Teacher Compliance', desc: 'See which teachers are recording attendance and which are falling behind.', cat: 'attendance', starred: true },
+    { name: 'Daily Attendance', desc: "Today's attendance for every class on one page.", cat: 'attendance' },
+    { name: 'Student Summary', desc: 'Per-student attendance rates and trends.', cat: 'attendance' },
+    { name: 'Class Rates', desc: 'Attendance rate broken down by class.', cat: 'attendance' },
+    { name: 'Chronic Absentees', desc: 'Students with 5 or more absences.', cat: 'attendance' },
+    { name: 'Below Threshold', desc: 'Students whose attendance rate fell under a chosen percentage.', cat: 'attendance' },
+    { name: 'Teacher Log', desc: 'Days each teacher has marked attendance.', cat: 'attendance' },
+    { name: 'Class Grades', desc: 'All grades for every assignment in a class.', cat: 'grades' },
+    { name: 'Class Averages', desc: 'Average grade per assignment in a class.', cat: 'grades' },
+    { name: 'Failing Students', desc: 'Students currently failing based on grade cutoff.', cat: 'grades', starred: true },
+    { name: 'Top Students', desc: 'Top-performing students across the school.', cat: 'grades' },
+    { name: 'Distribution', desc: 'Grade distribution (A/B/C/D/F) by class.', cat: 'grades' },
+    { name: 'Student Directory', desc: 'All active students with contact info and parent contacts.', cat: 'directory' },
+    { name: 'Parent Directory', desc: 'All active parents and their children in class.', cat: 'directory' },
+    { name: 'Class Roster', desc: 'Students assigned to each class with contact info.', cat: 'directory' },
+    { name: 'Hifz Progress', desc: 'All students with Hifz info and assigned teacher.', cat: 'hifz' },
+    { name: 'Infraction Log', desc: 'All infractions across the school.', cat: 'behavior' },
+    { name: 'Repeat Offenders', desc: 'Students with infractions above a set number.', cat: 'behavior' },
+    { name: 'Pending Follow Up', desc: 'Infractions with status "in progress"', cat: 'behavior' },
+    { name: 'School Profile', desc: 'All information associated with your school.', cat: 'profile' },
+  ];
+
+  const filtered = _reportTab === 'all' ? reports : reports.filter(r => r.cat === _reportTab);
+  const catColors = { attendance:'#f59e0b', grades:'#3b82f6', directory:'#8b5cf6', hifz:'#10b981', behavior:'#ef4444', billing:'#06b6d4', profile:'#6b7280' };
+
+  document.getElementById('mainContent').innerHTML = `
+    <div class="page-header">
+      <div>
+        <div class="breadcrumb">Dashboard</div>
+        <h2>Reports</h2>
+        <p>Generate attendance, grade, billing, roster &amp; Hifz reports.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:0;">
+      <div class="tabs" style="margin-bottom:0;border-bottom:none;flex-wrap:wrap;">
+        ${tabs.map(t=>t==='all'?
+          `<button class="tab-btn ${_reportTab==='all'?'active':''}" onclick="_reportTab='all';renderReportBuilder();">All</button>`:
+          `<button class="tab-btn ${_reportTab===t?'active':''}" onclick="_reportTab='${t}';renderReportBuilder();">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`
+        ).join('')}
+      </div>
+      <div class="search-input-wrap" style="max-width:220px;">
+        <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>
+        <input class="form-input search-input" type="text" placeholder="Search reports" />
+      </div>
+    </div>
+    <div style="border-bottom:1px solid var(--border);margin-bottom:16px;"></div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>REPORT</th><th>CATEGORY</th><th>ACTION</th></tr></thead>
+          <tbody>
+            ${filtered.map(r => `
+              <tr>
+                <td>
+                  <div style="display:flex;align-items:flex-start;gap:10px;">
+                    <div style="width:28px;height:28px;border-radius:6px;background:${catColors[r.cat]}22;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">
+                      <div style="width:8px;height:8px;border-radius:50%;background:${catColors[r.cat]};"></div>
+                    </div>
+                    <div>
+                      <div style="font-weight:600;font-size:13.5px;">${r.name}${r.starred?` <span style="font-size:10px;background:#fef9c3;color:#854d0e;border-radius:4px;padding:1px 5px;margin-left:4px;">⭐</span>`:''}</div>
+                      <div style="font-size:12px;color:var(--text3);margin-top:2px;">${r.desc}</div>
+                    </div>
+                  </div>
+                </td>
+                <td><span style="font-size:12px;font-weight:600;color:${catColors[r.cat]};">${r.cat.charAt(0).toUpperCase()+r.cat.slice(1)}</span></td>
+                <td><button class="btn btn-primary btn-sm" onclick="runReport('${r.name}')">Run →</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function runReport(name) {
+  toast(`Running "${name}" report…`, 'success');
 }
