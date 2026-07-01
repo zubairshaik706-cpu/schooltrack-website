@@ -3158,6 +3158,8 @@ function exportInfractionsCSV() {
 // =============================================
 function billing() {
   document.getElementById('topbarActions').innerHTML = `<button class="btn btn-secondary" onclick="toast('Archive coming soon.','')">Archive</button>`;
+  const paymentSetup = DB.get('payment_setup');
+
   document.getElementById('mainContent').innerHTML = `
     <div class="page-header">
       <div>
@@ -3166,49 +3168,238 @@ function billing() {
         <p>Manage invoices and collect tuition payments</p>
       </div>
     </div>
-    <div class="card">
-      <div style="max-width:460px;margin:40px auto;text-align:center;padding:20px;">
-        <div style="width:72px;height:72px;border-radius:16px;background:#2563eb;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
-          <svg viewBox="0 0 24 24" fill="white" width="36" height="36"><path d="M4 4h16a2 2 0 012 2v1H2V6a2 2 0 012-2zm-2 5h20v9a2 2 0 01-2 2H4a2 2 0 01-2-2V9zm5 5a1 1 0 100 2h2a1 1 0 100-2H7z"/></svg>
-        </div>
-        <h3 style="font-size:20px;font-weight:700;margin-bottom:8px;">Set Up Payment Collection</h3>
-        <p style="color:var(--text3);font-size:14px;margin-bottom:24px;line-height:1.6;">Connect your payment account to start collecting tuition payments from parents. Payments go directly to your bank account.</p>
-        <div style="display:flex;justify-content:center;gap:28px;margin-bottom:28px;">
-          <div style="text-align:center;">
-            <div style="width:44px;height:44px;border-radius:10px;background:#eff6ff;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
-              <svg viewBox="0 0 20 20" fill="#2563eb" width="22" height="22"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-            </div>
-            <div style="font-size:12.5px;font-weight:600;">Secure</div>
-            <div style="font-size:11px;color:var(--text4);">PCI compliant</div>
+
+    ${paymentSetup ? `
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <div class="card-title">
+            <span style="display:inline-flex;align-items:center;gap:6px;">
+              <span style="width:10px;height:10px;border-radius:50%;background:#10b981;display:inline-block;"></span>
+              Payment Collection Active
+            </span>
           </div>
-          <div style="text-align:center;">
-            <div style="width:44px;height:44px;border-radius:10px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
-              <svg viewBox="0 0 20 20" fill="#16a34a" width="22" height="22"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
-            </div>
-            <div style="font-size:12.5px;font-weight:600;">Fast Payouts</div>
-            <div style="font-size:11px;color:var(--text4);">2-day transfers</div>
-          </div>
-          <div style="text-align:center;">
-            <div style="width:44px;height:44px;border-radius:10px;background:#fefce8;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
-              <svg viewBox="0 0 20 20" fill="#ca8a04" width="22" height="22"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/></svg>
-            </div>
-            <div style="font-size:12.5px;font-weight:600;">All Cards</div>
-            <div style="font-size:11px;color:var(--text4);">Visa, MC, Amex</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="openPaymentSetupModal()">✎ Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="if(confirm('Remove payment setup?')){DB.set('payment_setup',null);billing();toast('Payment setup removed.','');}">Remove</button>
           </div>
         </div>
-        <button class="btn btn-primary" style="padding:11px 28px;font-size:14.5px;" onclick="toast('Payment setup coming soon!','')">→ Get Started</button>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:8px 0;">
+          <div>
+            <div style="font-size:11px;color:var(--text4);font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Business</div>
+            <div style="font-size:14px;font-weight:600;margin-top:4px;">${paymentSetup.businessName}</div>
+            <div style="font-size:12px;color:var(--text3);">${paymentSetup.businessType}</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text4);font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Bank Account</div>
+            <div style="font-size:14px;font-weight:600;margin-top:4px;">${paymentSetup.accountHolder}</div>
+            <div style="font-size:12px;color:var(--text3);">Ending in ••••${paymentSetup.accountNumberLast4}</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--text4);font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Monthly Tuition</div>
+            <div style="font-size:22px;font-weight:700;color:#10b981;margin-top:4px;">$${paymentSetup.tuitionAmount || '0.00'}</div>
+            <div style="font-size:12px;color:var(--text3);">per student</div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="card" style="margin-top:16px;">
-      <div class="card-header">
-        <div class="card-title">💳 Tuition Payments</div>
-        <button class="btn btn-secondary btn-sm" onclick="navigate('tuition')">View Tuition →</button>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">💳 Tuition Invoices</div>
+          <button class="btn btn-primary btn-sm" onclick="openCreateInvoiceModal()">+ Create Invoice</button>
+        </div>
+        ${DB.getList('invoices').length === 0 ? `
+          <div class="empty-state" style="padding:32px;">
+            <div class="empty-state-icon">💳</div>
+            <h3>No invoices yet</h3>
+            <p>Create your first invoice to start collecting tuition from parents.</p>
+            <button class="btn btn-primary" onclick="openCreateInvoiceModal()">+ Create Invoice</button>
+          </div>
+        ` : `
+          <div class="table-wrap"><table>
+            <thead><tr><th>Student</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${DB.getList('invoices').map(inv => {
+                const s = DB.getList('students').find(st => st.id == inv.studentId);
+                return `<tr>
+                  <td>${s ? s.firstName + ' ' + s.lastName : '—'}</td>
+                  <td style="font-weight:600;">$${parseFloat(inv.amount || 0).toFixed(2)}</td>
+                  <td>${formatDate(inv.dueDate)}</td>
+                  <td><span class="badge ${inv.status==='paid'?'badge-green':inv.status==='overdue'?'badge-red':'badge-yellow'}">${inv.status}</span></td>
+                  <td>
+                    ${inv.status !== 'paid' ? `<button class="btn btn-primary btn-sm" onclick="markInvoicePaid('${inv.id}')">Mark Paid</button>` : ''}
+                    <button class="btn btn-secondary btn-sm" onclick="DB.remove('invoices','${inv.id}');billing();">Delete</button>
+                  </td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table></div>
+        `}
       </div>
-      <div class="empty-state" style="padding:24px;">
-        <p style="color:var(--text3);">Set up payment collection above to start accepting tuition payments.</p>
+    ` : `
+      <div class="card">
+        <div style="max-width:460px;margin:40px auto;text-align:center;padding:20px;">
+          <div style="width:72px;height:72px;border-radius:16px;background:#2563eb;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+            <svg viewBox="0 0 24 24" fill="white" width="36" height="36"><path d="M4 4h16a2 2 0 012 2v1H2V6a2 2 0 012-2zm-2 5h20v9a2 2 0 01-2 2H4a2 2 0 01-2-2V9zm5 5a1 1 0 100 2h2a1 1 0 100-2H7z"/></svg>
+          </div>
+          <h3 style="font-size:20px;font-weight:700;margin-bottom:8px;">Set Up Payment Collection</h3>
+          <p style="color:var(--text3);font-size:14px;margin-bottom:24px;line-height:1.6;">Connect your payment account to start collecting tuition payments from parents. Payments go directly to your bank account.</p>
+          <div style="display:flex;justify-content:center;gap:28px;margin-bottom:28px;">
+            <div style="text-align:center;">
+              <div style="width:44px;height:44px;border-radius:10px;background:#eff6ff;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+                <svg viewBox="0 0 20 20" fill="#2563eb" width="22" height="22"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+              </div>
+              <div style="font-size:12.5px;font-weight:600;">Secure</div>
+              <div style="font-size:11px;color:var(--text4);">PCI compliant</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="width:44px;height:44px;border-radius:10px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+                <svg viewBox="0 0 20 20" fill="#16a34a" width="22" height="22"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
+              </div>
+              <div style="font-size:12.5px;font-weight:600;">Fast Payouts</div>
+              <div style="font-size:11px;color:var(--text4);">2-day transfers</div>
+            </div>
+            <div style="text-align:center;">
+              <div style="width:44px;height:44px;border-radius:10px;background:#fefce8;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+                <svg viewBox="0 0 20 20" fill="#ca8a04" width="22" height="22"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/><path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/></svg>
+              </div>
+              <div style="font-size:12.5px;font-weight:600;">All Cards</div>
+              <div style="font-size:11px;color:var(--text4);">Visa, MC, Amex</div>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="padding:11px 28px;font-size:14.5px;" onclick="openPaymentSetupModal()">→ Get Started</button>
+        </div>
       </div>
-    </div>
+    `}
   `;
+}
+
+function openCreateInvoiceModal() {
+  const students = DB.getList('students').filter(s => s.status === 'active');
+  const setup = DB.get('payment_setup');
+  openModal('Create Invoice', `
+    <form onsubmit="submitInvoice(event)" class="form-grid" style="min-width:360px;">
+      <div class="form-group">
+        <label class="form-label">Student <span class="required">*</span></label>
+        <select class="form-select" name="studentId" required>
+          <option value="">Select student…</option>
+          ${students.map(s => `<option value="${s.id}">${s.firstName} ${s.lastName}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount ($) <span class="required">*</span></label>
+        <input class="form-input" name="amount" type="number" step="0.01" min="0" required value="${setup?.tuitionAmount || ''}" placeholder="0.00" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Due Date <span class="required">*</span></label>
+        <input class="form-input" name="dueDate" type="date" required value="${today()}" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <input class="form-input" name="description" placeholder="Monthly tuition – July 2026" />
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Create Invoice</button>
+      </div>
+    </form>
+  `);
+}
+
+function submitInvoice(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  DB.push('invoices', {
+    studentId: fd.get('studentId'),
+    amount: fd.get('amount'),
+    dueDate: fd.get('dueDate'),
+    description: fd.get('description'),
+    status: 'pending',
+    createdAt: today()
+  });
+  closeModal();
+  toast('Invoice created successfully!', 'success');
+  billing();
+}
+
+function markInvoicePaid(id) {
+  DB.update('invoices', id, { status: 'paid', paidAt: today() });
+  toast('Invoice marked as paid!', 'success');
+  billing();
+}
+
+function openPaymentSetupModal() {
+  openModal('Set Up Payment Collection', `
+    <form onsubmit="submitPaymentSetup(event)" class="form-grid" style="min-width:420px;">
+      <p style="color:var(--text3);font-size:13px;margin-bottom:4px;">Enter your business details to start collecting tuition payments. Funds are deposited directly to your bank account within 2 business days.</p>
+      <div class="form-grid form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Business / School Name <span class="required">*</span></label>
+          <input class="form-input" name="businessName" required placeholder="BHA Islamic School" value="${(getUser().schoolName || '')}" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Business Type <span class="required">*</span></label>
+          <select class="form-select" name="businessType" required>
+            <option value="">Select…</option>
+            <option>Non-profit organization</option>
+            <option>Religious institution</option>
+            <option>Private school</option>
+            <option>Individual / Sole proprietor</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid form-grid-2">
+        <div class="form-group">
+          <label class="form-label">Account Holder Name <span class="required">*</span></label>
+          <input class="form-input" name="accountHolder" required placeholder="Full legal name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Routing Number <span class="required">*</span></label>
+          <input class="form-input" name="routingNumber" required placeholder="9-digit routing number" maxlength="9" pattern="[0-9]{9}" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bank Account Number <span class="required">*</span></label>
+        <input class="form-input" name="accountNumber" required placeholder="Account number" type="password" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Monthly Tuition Amount (per student)</label>
+        <div style="position:relative;">
+          <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-weight:600;">$</span>
+          <input class="form-input" name="tuitionAmount" placeholder="0.00" type="number" step="0.01" min="0" style="padding-left:26px;" />
+        </div>
+      </div>
+      <div style="background:var(--blue-bg);border-radius:8px;padding:12px;font-size:12.5px;color:#1e40af;display:flex;gap:8px;align-items:flex-start;">
+        <span style="flex-shrink:0;">🔒</span>
+        <span>Your banking information is stored securely and encrypted. We use bank-level 256-bit SSL encryption. You can remove your payment method at any time from Settings.</span>
+      </div>
+      <div class="form-group" style="margin-top:4px;">
+        <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;color:var(--text2);">
+          <input type="checkbox" name="agree" required style="margin-top:2px;accent-color:var(--primary);" />
+          I agree to the payment processing terms and authorize SchoolTrack to debit/credit the bank account above for tuition collection.
+        </label>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">✓ Save & Activate Payments</button>
+      </div>
+    </form>
+  `);
+}
+
+function submitPaymentSetup(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  DB.set('payment_setup', {
+    businessName: fd.get('businessName'),
+    businessType: fd.get('businessType'),
+    accountHolder: fd.get('accountHolder'),
+    routingNumber: fd.get('routingNumber'),
+    accountNumberLast4: (fd.get('accountNumber') || '').slice(-4),
+    tuitionAmount: fd.get('tuitionAmount'),
+    activatedAt: today()
+  });
+  closeModal();
+  toast('Payment collection activated! Parents can now pay tuition online.', 'success');
+  billing();
 }
 
 // =============================================
@@ -3314,5 +3505,143 @@ function renderReportBuilder() {
 }
 
 function runReport(name) {
-  toast(`Running "${name}" report…`, 'success');
+  const students = DB.getList('students');
+  const classes = DB.getList('classes');
+  const attendance = DB.getList('attendance');
+  const grades = DB.getList('grades');
+  const staff = DB.getList('staff');
+
+  function pct(n, d) { return d === 0 ? '—' : Math.round(n / d * 100) + '%'; }
+
+  let title = name;
+  let bodyHTML = '';
+
+  if (name === 'Daily Attendance') {
+    const todayStr = today();
+    const recs = attendance.filter(r => r.date === todayStr);
+    if (recs.length === 0) {
+      bodyHTML = `<div class="empty-state"><p>No attendance recorded for today (${todayStr}).</p></div>`;
+    } else {
+      bodyHTML = `<div class="table-wrap"><table><thead><tr><th>Student</th><th>Class</th><th>Status</th><th>Notes</th></tr></thead><tbody>
+        ${recs.map(r => {
+          const s = students.find(st => st.id == r.studentId);
+          const c = classes.find(cl => cl.id == r.classId);
+          return `<tr><td>${s ? s.firstName + ' ' + s.lastName : '—'}</td><td>${c ? c.name : '—'}</td><td><span class="badge ${r.status==='present'?'badge-green':r.status==='absent'?'badge-red':'badge-yellow'}">${r.status}</span></td><td>${r.notes || '—'}</td></tr>`;
+        }).join('')}
+      </tbody></table></div>`;
+    }
+  } else if (name === 'Student Summary') {
+    if (students.length === 0) {
+      bodyHTML = `<div class="empty-state"><p>No students enrolled yet.</p></div>`;
+    } else {
+      bodyHTML = `<div class="table-wrap"><table><thead><tr><th>Student</th><th>Total Sessions</th><th>Present</th><th>Absent</th><th>Attendance Rate</th></tr></thead><tbody>
+        ${students.map(s => {
+          const recs = attendance.filter(r => r.studentId == s.id);
+          const present = recs.filter(r => r.status === 'present').length;
+          const absent = recs.filter(r => r.status === 'absent').length;
+          return `<tr><td>${s.firstName} ${s.lastName}</td><td>${recs.length}</td><td style="color:#10b981;font-weight:600;">${present}</td><td style="color:#ef4444;font-weight:600;">${absent}</td><td><strong>${pct(present, recs.length)}</strong></td></tr>`;
+        }).join('')}
+      </tbody></table></div>`;
+    }
+  } else if (name === 'Class Rates') {
+    if (classes.length === 0) {
+      bodyHTML = `<div class="empty-state"><p>No classes set up yet.</p></div>`;
+    } else {
+      bodyHTML = `<div class="table-wrap"><table><thead><tr><th>Class</th><th>Sessions Recorded</th><th>Present</th><th>Absent</th><th>Attendance Rate</th></tr></thead><tbody>
+        ${classes.map(c => {
+          const recs = attendance.filter(r => r.classId == c.id);
+          const present = recs.filter(r => r.status === 'present').length;
+          const absent = recs.filter(r => r.status === 'absent').length;
+          return `<tr><td><strong>${c.name}</strong></td><td>${recs.length}</td><td style="color:#10b981;font-weight:600;">${present}</td><td style="color:#ef4444;font-weight:600;">${absent}</td><td><strong>${pct(present, recs.length)}</strong></td></tr>`;
+        }).join('')}
+      </tbody></table></div>`;
+    }
+  } else if (name === 'Teacher Compliance') {
+    if (staff.length === 0) {
+      bodyHTML = `<div class="empty-state"><p>No teachers added yet.</p></div>`;
+    } else {
+      bodyHTML = `<div class="table-wrap"><table><thead><tr><th>Teacher</th><th>Classes</th><th>Sessions Marked</th><th>Status</th></tr></thead><tbody>
+        ${staff.map(t => {
+          const teacherClasses = classes.filter(c => c.teacher === t.name);
+          const marked = attendance.filter(r => teacherClasses.some(c => c.id == r.classId)).length;
+          return `<tr><td><strong>${t.name}</strong></td><td>${teacherClasses.length}</td><td>${marked}</td><td><span class="badge ${marked > 0 ? 'badge-green' : 'badge-red'}">${marked > 0 ? 'Recording' : 'Not started'}</span></td></tr>`;
+        }).join('')}
+      </tbody></table></div>`;
+    }
+  } else if (name === 'Chronic Absentees') {
+    const chronic = students.filter(s => attendance.filter(r => r.studentId == s.id && r.status === 'absent').length >= 5);
+    if (chronic.length === 0) {
+      bodyHTML = `<div class="empty-state" style="padding:24px;"><p style="color:#10b981;font-weight:600;">✓ No chronic absentees! All students have fewer than 5 absences.</p></div>`;
+    } else {
+      bodyHTML = `<div class="table-wrap"><table><thead><tr><th>Student</th><th>Absences</th></tr></thead><tbody>
+        ${chronic.map(s => {
+          const absences = attendance.filter(r => r.studentId == s.id && r.status === 'absent').length;
+          return `<tr><td>${s.firstName} ${s.lastName}</td><td><span class="badge badge-red">${absences} absences</span></td></tr>`;
+        }).join('')}
+      </tbody></table></div>`;
+    }
+  } else if (name === 'Student Directory') {
+    if (students.length === 0) {
+      bodyHTML = `<div class="empty-state"><p>No students enrolled yet.</p></div>`;
+    } else {
+      bodyHTML = `<div class="table-wrap"><table><thead><tr><th>Name</th><th>Gender</th><th>Class</th><th>Parent Email</th><th>Status</th></tr></thead><tbody>
+        ${students.map(s => {
+          const c = classes.find(cl => cl.id == s.classId);
+          return `<tr><td><strong>${s.firstName} ${s.lastName}</strong></td><td>${s.gender || '—'}</td><td>${c ? c.name : '—'}</td><td>${s.email || '—'}</td><td><span class="badge ${s.status==='active'?'badge-green':'badge-gray'}">${s.status}</span></td></tr>`;
+        }).join('')}
+      </tbody></table></div>`;
+    }
+  } else if (name === 'Class Grades') {
+    if (grades.length === 0) {
+      bodyHTML = `<div class="empty-state"><p>No grades recorded yet.</p></div>`;
+    } else {
+      bodyHTML = `<div class="table-wrap"><table><thead><tr><th>Student</th><th>Subject</th><th>Assignment</th><th>Score</th><th>Date</th></tr></thead><tbody>
+        ${grades.map(g => {
+          const s = students.find(st => st.id == g.studentId);
+          const pctVal = Math.round(g.score / g.total * 100);
+          return `<tr><td>${s ? s.firstName + ' ' + s.lastName : '—'}</td><td>${g.subject}</td><td>${g.assignment}</td><td><span class="badge ${pctVal>=90?'badge-green':pctVal>=70?'badge-blue':'badge-red'}">${g.score}/${g.total} (${pctVal}%)</span></td><td>${formatDate(g.date)}</td></tr>`;
+        }).join('')}
+      </tbody></table></div>`;
+    }
+  } else if (name === 'Top Students') {
+    const ranked = students.map(s => {
+      const sg = grades.filter(g => g.studentId == s.id);
+      const avg = sg.length ? Math.round(sg.reduce((a,g) => a + g.score/g.total*100, 0) / sg.length) : null;
+      return { ...s, avg };
+    }).filter(s => s.avg !== null).sort((a,b) => b.avg - a.avg);
+    if (ranked.length === 0) {
+      bodyHTML = `<div class="empty-state"><p>No grades recorded yet.</p></div>`;
+    } else {
+      bodyHTML = `<div class="table-wrap"><table><thead><tr><th>Rank</th><th>Student</th><th>Average Grade</th></tr></thead><tbody>
+        ${ranked.map((s, i) => `<tr><td><strong>#${i+1}</strong></td><td>${s.firstName} ${s.lastName}</td><td><span class="badge ${s.avg>=90?'badge-green':s.avg>=70?'badge-blue':'badge-red'}">${s.avg}%</span></td></tr>`).join('')}
+      </tbody></table></div>`;
+    }
+  } else if (name === 'Teacher Log') {
+    if (staff.length === 0) {
+      bodyHTML = `<div class="empty-state"><p>No teachers added yet.</p></div>`;
+    } else {
+      bodyHTML = `<div class="table-wrap"><table><thead><tr><th>Teacher</th><th>Role</th><th>Classes</th><th>Days Marked</th></tr></thead><tbody>
+        ${staff.map(t => {
+          const teacherClasses = classes.filter(c => c.teacher === t.name);
+          const days = [...new Set(attendance.filter(r => teacherClasses.some(c => c.id == r.classId)).map(r => r.date))].length;
+          return `<tr><td><strong>${t.name}</strong></td><td>${t.role || '—'}</td><td>${teacherClasses.length}</td><td>${days}</td></tr>`;
+        }).join('')}
+      </tbody></table></div>`;
+    }
+  } else if (name === 'School Profile') {
+    const user = getUser();
+    bodyHTML = `<div class="form-grid" style="gap:12px;">
+      <div><strong>School Name:</strong> ${user.schoolName || '—'}</div>
+      <div><strong>Admin:</strong> ${(user.firstName||'')} ${(user.lastName||'')}</div>
+      <div><strong>Email:</strong> ${user.email || '—'}</div>
+      <div><strong>Phone:</strong> ${user.phone || '—'}</div>
+      <div><strong>Total Students:</strong> ${students.length}</div>
+      <div><strong>Total Teachers:</strong> ${staff.length}</div>
+      <div><strong>Total Classes:</strong> ${classes.length}</div>
+    </div>`;
+  } else {
+    bodyHTML = `<div class="empty-state" style="padding:32px;"><div class="empty-state-icon">📊</div><p>This report is available once you have more data in your school account.</p></div>`;
+  }
+
+  openModal(title, `<div style="min-width:480px;max-width:700px;">${bodyHTML}</div>`);
 }
