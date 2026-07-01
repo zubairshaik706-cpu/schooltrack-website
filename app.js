@@ -861,9 +861,15 @@ function changeStudentStatus(id, status) {
 // PAGE: CLASSES
 // =============================================
 function classes() {
-  document.getElementById('topbarActions').innerHTML = `<button class="btn btn-primary" onclick="openAddClassModal()">+ Add Class</button>`;
   const classList = DB.getList('classes');
   const students = DB.getList('students');
+
+  if (classList.length === 0) {
+    classSetupWizard();
+    return;
+  }
+
+  document.getElementById('topbarActions').innerHTML = `<button class="btn btn-primary" onclick="openAddClassModal()">+ Add Class</button>`;
 
   document.getElementById('mainContent').innerHTML = `
     <div class="page-header">
@@ -1001,6 +1007,104 @@ function removeClass(id) {
   if (!confirm('Remove this class? Students will not be deleted.')) return;
   DB.remove('classes', id);
   toast('Class removed.', '');
+  classes();
+}
+
+// =============================================
+// CLASS SETUP WIZARD
+// =============================================
+let _classSetupTemplate = '';
+const CLASS_TEMPLATES = {
+  'Weekend School': ['Islamic Studies', 'Quran', 'Arabic', 'Seerah'],
+  'Maktab': ['Quran Recitation', 'Islamic Studies', 'Urdu', 'Duas & Surahs'],
+  'Madrasah': ['Hifz', 'Tajweed', 'Fiqh', 'Arabic', 'Aqeedah', 'Hadith'],
+  'Custom': []
+};
+
+function classSetupWizard() {
+  document.getElementById('topbarActions').innerHTML = '';
+  document.getElementById('mainContent').innerHTML = `
+    <div style="min-height:calc(100vh - var(--topbar-h) - 56px);display:flex;align-items:flex-start;justify-content:center;padding:32px 16px;background:var(--bg);">
+      <div class="class-setup-card">
+        <div style="text-align:center;margin-bottom:28px;">
+          <div class="class-setup-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="1.8" width="28" height="28"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          <h2 style="font-size:20px;font-weight:800;color:var(--text);margin-top:14px;margin-bottom:6px;">Set up your classes</h2>
+          <p style="font-size:14px;color:var(--text3);max-width:440px;margin:0 auto;">We'll create a basic class structure for your school. You can customize this later.</p>
+        </div>
+
+        <div class="class-setup-protip">
+          <svg viewBox="0 0 20 20" fill="#2563eb" width="16" height="16"><path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.997.134-2.02.5-2.914.484-1.173 1.5-2.086 1.5-3.086a4 4 0 10-8 0c0 1 1.016 1.913 1.5 3.086.366.894.485 1.917.5 2.914h4z"/></svg>
+          <div><span style="font-weight:700;color:#2563eb;">Pro Tip</span><br>Don't worry about getting this perfect right now. You can always add, remove, or rename classes later from your dashboard.</div>
+        </div>
+
+        <div style="margin-bottom:24px;">
+          <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;">Choose a template to get started quickly:</div>
+          <div class="class-template-grid">
+            ${Object.keys(CLASS_TEMPLATES).map(t => `
+              <button class="class-template-btn ${_classSetupTemplate===t?'selected':''}" onclick="selectClassTemplate('${t}')">
+                <div class="class-template-icon ${t.toLowerCase().replace(' ','-')}">
+                  ${t === 'Weekend School' ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="26" height="26"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4a3 3 0 016 0v4"/></svg>` :
+                    t === 'Maktab' ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="26" height="26"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>` :
+                    t === 'Madrasah' ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="26" height="26"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4a3 3 0 016 0v4"/></svg>` :
+                    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="26" height="26"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>`}
+                </div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);">${t}</div>
+                ${t === 'Custom' ? `<div style="font-size:11.5px;color:var(--text4);">Start from scratch</div>` : ''}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;">Your Subjects & Levels</div>
+          <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">Select a template above to populate subjects and levels automatically, or add them manually.</p>
+          <div id="classSetupSubjects">
+            ${_classSetupTemplate && CLASS_TEMPLATES[_classSetupTemplate].length > 0 ? `
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                ${CLASS_TEMPLATES[_classSetupTemplate].map(s => `
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+                    <span style="font-size:13.5px;font-weight:500;">${s}</span>
+                    <button class="btn btn-secondary btn-sm">Edit</button>
+                  </div>
+                `).join('')}
+                <button class="btn btn-secondary btn-sm" style="align-self:flex-start;margin-top:4px;" onclick="toast('Add subject coming soon.','')">+ Add Subject</button>
+              </div>
+            ` : `
+              <div style="text-align:center;padding:32px;color:var(--text4);">
+                <div style="font-size:28px;margin-bottom:8px;">☝️</div>
+                <div style="font-size:13px;">Select a template above to get started</div>
+              </div>
+            `}
+          </div>
+        </div>
+
+        <div class="class-setup-footer">
+          <button class="btn btn-secondary" onclick="navigate('dashboard')">‹ Back</button>
+          <button class="btn btn-primary" style="background:#2563eb;border-color:#2563eb;min-width:180px;" onclick="finishClassSetup()">Continue to Payment →</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function selectClassTemplate(t) {
+  _classSetupTemplate = t;
+  classSetupWizard();
+}
+
+function finishClassSetup() {
+  if (!_classSetupTemplate) { toast('Please select a template first.', 'error'); return; }
+  const subjects = CLASS_TEMPLATES[_classSetupTemplate];
+  if (subjects.length > 0) {
+    subjects.forEach(s => DB.push('classes', { name: s, teacher: '', level: _classSetupTemplate, schedule: '' }));
+    toast(`${subjects.length} classes created from ${_classSetupTemplate} template!`, 'success');
+  } else {
+    openAddClassModal();
+    return;
+  }
+  _classSetupTemplate = '';
   classes();
 }
 
@@ -1818,92 +1922,147 @@ function removeMessage(id) {
 // =============================================
 // PAGE: SETTINGS
 // =============================================
+let _settingsTab = 'profile';
+
 function settings() {
+  renderSettings(_settingsTab);
+}
+
+function renderSettings(tab) {
+  _settingsTab = tab;
   const user = getUser();
+  const tabs = ['Profile','Billing','Attendance','SMS','Calendar','Enrollments','Data'];
+
   document.getElementById('mainContent').innerHTML = `
-    <div class="page-header"><h2>Settings</h2></div>
-
-    <div style="max-width:560px;display:flex;flex-direction:column;gap:16px;">
-      <div class="card">
-        <div class="card-title" style="margin-bottom:16px;">School Information</div>
-        <form onsubmit="saveSettings(event)" class="form-grid">
-          <div class="form-group">
-            <label class="form-label">School Name</label>
-            <input class="form-input" name="schoolName" value="${user.schoolName || ''}" placeholder="Al-Noor Academy" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Admin Name</label>
-            <input class="form-input" value="${user.firstName + ' ' + user.lastName}" readonly style="background:var(--bg);color:var(--text3);" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Email</label>
-            <input class="form-input" value="${user.email || ''}" readonly style="background:var(--bg);color:var(--text3);" />
-          </div>
-          <div>
-            <button type="submit" class="btn btn-primary">Save Changes</button>
-          </div>
-        </form>
+    <div class="page-header">
+      <div>
+        <div class="breadcrumb">Dashboard</div>
+        <h2>Settings</h2>
+        <p>Manage settings for ${user.schoolName || 'My School'}</p>
       </div>
+    </div>
 
-      <div class="card">
-        <div class="card-title" style="margin-bottom:16px;">Change Password</div>
-        <form onsubmit="changePassword(event)" class="form-grid">
-          <div class="form-group">
-            <label class="form-label">Current Password</label>
-            <input class="form-input" name="currentPw" type="password" placeholder="Enter current password" required />
-          </div>
-          <div class="form-group">
-            <label class="form-label">New Password</label>
-            <input class="form-input" name="newPw" type="password" placeholder="Min 6 characters" minlength="6" required />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Confirm New Password</label>
-            <input class="form-input" name="confirmPw" type="password" placeholder="Repeat new password" required />
-          </div>
-          <div>
-            <button type="submit" class="btn btn-secondary">Update Password</button>
-          </div>
-        </form>
-      </div>
+    <div class="tabs" style="margin-bottom:0;">
+      ${tabs.map(t => `<button class="tab-btn ${_settingsTab===t.toLowerCase()?'active':''}" onclick="renderSettings('${t.toLowerCase()}')">${t}</button>`).join('')}
+    </div>
+    <div style="border-bottom:1px solid var(--border);margin-bottom:20px;"></div>
 
-      <div class="card">
-        <div class="card-title" style="margin-bottom:16px;">Data & Backup</div>
-        <p style="font-size:13.5px;color:var(--text3);margin-bottom:16px;">All your data is saved locally in your browser. Export a backup anytime.</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn btn-secondary" onclick="exportData()">Export JSON</button>
-          <button class="btn btn-secondary" onclick="exportStudentsCSV()">Export Students (CSV)</button>
-          <button class="btn btn-danger" onclick="clearAllData()">Reset All Data</button>
+    <div style="max-width:580px;display:flex;flex-direction:column;gap:16px;">
+      ${tab === 'profile' ? `
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;">School Information</div>
+          <form onsubmit="saveSettings(event)" class="form-grid">
+            <div class="form-group"><label class="form-label">School Name</label><input class="form-input" name="schoolName" value="${user.schoolName || ''}" placeholder="Al-Noor Academy" /></div>
+            <div class="form-group"><label class="form-label">Admin Name</label><input class="form-input" value="${user.firstName + ' ' + user.lastName}" readonly style="background:var(--bg);color:var(--text3);" /></div>
+            <div class="form-group"><label class="form-label">Email</label><input class="form-input" value="${user.email || ''}" readonly style="background:var(--bg);color:var(--text3);" /></div>
+            <div><button type="submit" class="btn btn-primary">Save Changes</button></div>
+          </form>
         </div>
-      </div>
-
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <div class="card-title">Parent Portal</div>
-          <button class="btn btn-primary btn-sm" onclick="openAddParentModal()">+ Add Parent</button>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;">Change Password</div>
+          <form onsubmit="changePassword(event)" class="form-grid">
+            <div class="form-group"><label class="form-label">Current Password</label><input class="form-input" name="currentPw" type="password" placeholder="Enter current password" required /></div>
+            <div class="form-group"><label class="form-label">New Password</label><input class="form-input" name="newPw" type="password" placeholder="Min 6 characters" minlength="6" required /></div>
+            <div class="form-group"><label class="form-label">Confirm New Password</label><input class="form-input" name="confirmPw" type="password" placeholder="Repeat new password" required /></div>
+            <div><button type="submit" class="btn btn-secondary">Update Password</button></div>
+          </form>
         </div>
-        <p style="font-size:13px;color:var(--text3);margin-bottom:12px;">Parents can log in at <strong>parent.html</strong> with their email and password to view their child's grades and attendance.</p>
-        ${(() => {
-          const parents = DB.getList('parents');
-          if (parents.length === 0) return '<p style="font-size:13px;color:var(--text3);">No parent accounts yet.</p>';
-          const students = DB.getList('students');
-          const sMap = Object.fromEntries(students.map(s=>[s.id, s.firstName+' '+s.lastName]));
-          return `<div class="table-wrap"><table>
-            <thead><tr><th>Name</th><th>Email</th><th>Children</th><th></th></tr></thead>
-            <tbody>${parents.map(p=>`<tr>
-              <td><strong>${p.name}</strong></td>
-              <td style="font-size:12px;color:var(--text3)">${p.email}</td>
-              <td style="font-size:12px;color:var(--text3)">${(p.studentIds||[]).map(id=>sMap[id]).filter(Boolean).join(', ')||'—'}</td>
-              <td><button class="btn btn-danger btn-sm" onclick="removeParent('${p.id}')">Remove</button></td>
-            </tr>`).join('')}</tbody>
-          </table></div>`;
-        })()}
-      </div>
-
-      <div class="card">
-        <div class="card-title" style="margin-bottom:4px;">Account</div>
-        <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">Logged in as <strong>${user.email}</strong></p>
-        <button class="btn btn-danger" onclick="logout()">Log out</button>
-      </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:4px;">Account</div>
+          <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">Logged in as <strong>${user.email}</strong></p>
+          <button class="btn btn-danger" onclick="logout()">Log out</button>
+        </div>
+      ` : tab === 'sms' ? `
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+            <div style="width:48px;height:48px;border-radius:12px;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg viewBox="0 0 20 20" fill="#16a34a" width="24" height="24"><path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/><path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/></svg>
+            </div>
+            <div>
+              <div style="font-size:15px;font-weight:700;">SMS Settings</div>
+              <div style="font-size:13px;color:var(--text3);">Send SMS messages to parents and students</div>
+            </div>
+          </div>
+          <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13.5px;color:var(--text2);margin-bottom:16px;line-height:1.6;">
+            Text announcements and attendance alerts to parents and students. You'll get a dedicated number, and usage is billed to your card on file at <strong>$0.03</strong> per message segment, totaled at the end of each month.
+          </div>
+          <label style="display:flex;align-items:flex-start;gap:10px;font-size:13.5px;margin-bottom:16px;cursor:pointer;">
+            <input type="checkbox" id="smsAck" style="margin-top:2px;width:14px;height:14px;accent-color:#0d9488;" />
+            I acknowledge SMS is billed at <strong>$0.03</strong> per message segment and added to my monthly invoice.
+          </label>
+          <div class="form-group" style="margin-bottom:20px;">
+            <label class="form-label">Monthly budget (USD, optional)</label>
+            <input class="form-input" type="number" id="smsBudget" value="0" min="0" style="max-width:120px;" />
+          </div>
+          <button class="btn btn-primary" style="background:#16a34a;border-color:#16a34a;display:flex;align-items:center;gap:8px;" onclick="toast('SMS setup coming soon!','success')">
+            <svg viewBox="0 0 20 20" fill="white" width="16" height="16"><path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"/><path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"/></svg>
+            Turn on SMS & get a number
+          </button>
+        </div>
+      ` : tab === 'billing' ? `
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;">Billing Settings</div>
+          <p style="font-size:13.5px;color:var(--text3);margin-bottom:16px;">Connect a payment account to collect tuition from parents.</p>
+          <button class="btn btn-primary" onclick="navigate('billing')">Set Up Payment Collection →</button>
+        </div>
+      ` : tab === 'attendance' ? `
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;">Attendance Settings</div>
+          <div class="form-group">
+            <label class="form-label">Default week start</label>
+            <select class="form-select" style="max-width:200px;"><option selected>Monday</option><option>Sunday</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Absence threshold (days)</label>
+            <input class="form-input" type="number" value="5" style="max-width:120px;" />
+          </div>
+          <button class="btn btn-primary" onclick="toast('Attendance settings saved.','success')">Save</button>
+        </div>
+      ` : tab === 'calendar' ? `
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;">Calendar Settings</div>
+          <p style="font-size:13.5px;color:var(--text3);margin-bottom:16px;">Import or sync your school calendar with external services.</p>
+          <button class="btn btn-secondary" onclick="toast('Calendar import coming soon.','')">Import Calendar (.ics)</button>
+        </div>
+      ` : tab === 'enrollments' ? `
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;">Enrollment Settings</div>
+          <p style="font-size:13.5px;color:var(--text3);margin-bottom:16px;">Manage enrollment form settings and public application links.</p>
+          <button class="btn btn-primary" onclick="navigate('enrollment')">Manage Enrollment Forms →</button>
+        </div>
+      ` : tab === 'data' ? `
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;">Data & Backup</div>
+          <p style="font-size:13.5px;color:var(--text3);margin-bottom:16px;">All your data is saved locally in your browser. Export a backup anytime.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn btn-secondary" onclick="exportData()">Export JSON</button>
+            <button class="btn btn-secondary" onclick="exportStudentsCSV()">Export Students (CSV)</button>
+            <button class="btn btn-danger" onclick="clearAllData()">Reset All Data</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:12px;">Parent Portal</div>
+          <p style="font-size:13px;color:var(--text3);margin-bottom:12px;">Parents log in at <strong>parent.html</strong> to view their child's grades and attendance.</p>
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <button class="btn btn-primary btn-sm" onclick="openAddParentModal()">+ Add Parent</button>
+          </div>
+          ${(() => {
+            const parentList = DB.getList('parents');
+            if (parentList.length === 0) return '<p style="font-size:13px;color:var(--text3);">No parent accounts yet.</p>';
+            const studentList = DB.getList('students');
+            const sMap = Object.fromEntries(studentList.map(s=>[s.id, s.firstName+' '+s.lastName]));
+            return `<div class="table-wrap"><table>
+              <thead><tr><th>Name</th><th>Email</th><th>Children</th><th></th></tr></thead>
+              <tbody>${parentList.map(p=>`<tr>
+                <td><strong>${p.name}</strong></td>
+                <td style="font-size:12px;color:var(--text3)">${p.email}</td>
+                <td style="font-size:12px;color:var(--text3)">${(p.studentIds||[]).map(id=>sMap[id]).filter(Boolean).join(', ')||'—'}</td>
+                <td><button class="btn btn-danger btn-sm" onclick="removeParent('${p.id}')">Remove</button></td>
+              </tr>`).join('')}</tbody>
+            </table></div>`;
+          })()}
+        </div>
+      ` : `<div class="card"><p style="color:var(--text3);font-size:13.5px;">Coming soon.</p></div>`}
     </div>
   `;
 }
@@ -2806,23 +2965,36 @@ function admins() {
 function parents() {
   const parentList = DB.getList('parents');
   const students = DB.getList('students');
-  document.getElementById('topbarActions').innerHTML = `<button class="btn btn-primary" onclick="navigate('settings')">+ Add Parent</button>`;
+  document.getElementById('topbarActions').innerHTML = `
+    <button class="btn btn-secondary" onclick="toast('Archive coming soon.','')">
+      <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14" style="margin-right:4px;"><path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4zM3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/></svg>
+      Archived
+    </button>
+    <button class="btn btn-primary" onclick="openAddParentModal()">+ Add Parent</button>
+  `;
   document.getElementById('mainContent').innerHTML = `
-    <div class="page-header">
-      <div>
-        <div class="breadcrumb">Dashboard › People</div>
-        <h2>Parents</h2>
-        <p>${parentList.length} parent account${parentList.length !== 1 ? 's' : ''}</p>
+    <div class="page-header" style="align-items:flex-start;">
+      <div style="display:flex;align-items:flex-start;gap:12px;">
+        <button onclick="navigate('dashboard')" style="margin-top:4px;color:var(--text4);background:none;border:none;cursor:pointer;font-size:18px;line-height:1;">‹</button>
+        <div>
+          <div class="breadcrumb">Dashboard › Parents</div>
+          <h2 style="font-size:26px;font-weight:800;">Parents</h2>
+          <p>Manage parent accounts and contacts</p>
+        </div>
       </div>
     </div>
-    <div class="card">
-      ${parentList.length === 0 ? `
-        <div class="empty-state">
-          <div class="empty-state-icon">👨‍👩‍👧</div>
-          <h3>No parent accounts yet</h3>
-          <p>Add parents from Settings → Parent Portal.</p>
-          <button class="btn btn-primary" onclick="navigate('settings')">Go to Settings</button>
-        </div>` : `
+
+    ${parentList.length === 0 ? `
+      <div class="parents-empty-card">
+        <div class="parents-empty-icon">
+          <svg viewBox="0 0 24 24" fill="#2563eb" width="36" height="36"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+        </div>
+        <h3 style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;">No parents</h3>
+        <p style="font-size:13.5px;color:var(--text3);max-width:280px;text-align:center;margin-bottom:20px;">Get started by adding your first parent to the system.</p>
+        <button class="btn btn-primary" style="background:#2563eb;border-color:#2563eb;" onclick="openAddParentModal()">+ Add Parent</button>
+      </div>
+    ` : `
+      <div class="card">
         <div class="table-wrap"><table>
           <thead><tr><th>Parent</th><th>Email</th><th>Children</th><th>Actions</th></tr></thead>
           <tbody>
@@ -2832,13 +3004,23 @@ function parents() {
                 <td><div style="display:flex;align-items:center;gap:10px;"><div class="student-avatar" style="background:#8b5cf6;">${(p.name?.[0]||'P').toUpperCase()}</div><strong>${p.name||'—'}</strong></div></td>
                 <td style="color:var(--text3);">${p.email||'—'}</td>
                 <td>${children.map(c=>`${c.firstName} ${c.lastName}`).join(', ')||'—'}</td>
-                <td><button class="btn btn-secondary btn-sm" onclick="navigate('settings')">Manage</button></td>
+                <td>
+                  <button class="btn btn-danger btn-sm" onclick="removeParentDirect('${p.id}')">Remove</button>
+                </td>
               </tr>`;
             }).join('')}
           </tbody>
-        </table></div>`}
-    </div>
+        </table></div>
+      </div>
+    `}
   `;
+}
+
+function removeParentDirect(id) {
+  if (!confirm('Remove this parent account?')) return;
+  DB.remove('parents', id);
+  toast('Parent removed.', '');
+  parents();
 }
 
 // =============================================

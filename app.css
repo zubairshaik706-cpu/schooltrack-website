@@ -783,3 +783,92 @@ table.att-week-table { width: 100%; border-collapse: collapse; }
   position: absolute; left: 10px; color: var(--text4);
 }
 .search-input-wrap .search-input { padding-left: 30px; }
+
+/* ===== CLASS SETUP WIZARD ===== */
+.class-setup-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 36px;
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+.class-setup-icon {
+  width: 60px; height: 60px;
+  border-radius: 14px;
+  background: #eff6ff;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto;
+}
+.class-setup-protip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #1e40af;
+  margin-bottom: 24px;
+  line-height: 1.55;
+}
+.class-template-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.class-template-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 8px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  font-family: inherit;
+  text-align: center;
+}
+.class-template-btn:hover { border-color: #2563eb; background: #eff6ff; }
+.class-template-btn.selected { border-color: #2563eb; background: #eff6ff; }
+.class-template-icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+}
+.class-template-icon.weekend-school { background: #eff6ff; color: #2563eb; }
+.class-template-icon.maktab { background: #f0fdf4; color: #16a34a; }
+.class-template-icon.madrasah { background: #eff6ff; color: #2563eb; }
+.class-template-icon.custom { background: #f9fafb; color: #6b7280; }
+.class-setup-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* ===== PARENTS EMPTY STATE ===== */
+.parents-empty-card {
+  border: 2px dashed var(--border2);
+  border-radius: 14px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  text-align: center;
+}
+.parents-empty-icon {
+  width: 68px; height: 68px;
+  border-radius: 16px;
+  background: #eff6ff;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+}
